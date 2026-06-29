@@ -23,12 +23,15 @@ import type {
 } from "../types";
 import { buildLearnedState } from "../data/mockData";
 import { loadState, resetState, saveState, uid } from "../utils/storage";
+import { trackEvent } from "../utils/metrics";
 
 export interface NavOptions {
   blockId?: string;
   graphFocusId?: string;
   graphMode?: string;
   query?: string;
+  /** 캐릭터 회의실에서 처음 열 탭 (persona | meeting | guardrail | recommend) */
+  plotTab?: string;
 }
 
 interface AppContextValue {
@@ -62,8 +65,21 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => loadState());
+export function AppProvider({
+  children,
+  seed,
+  persist = true,
+  track = true,
+}: {
+  children: ReactNode;
+  /** 주어지면 localStorage 대신 이 상태로 시작한다(랜딩 데모용 격리 상태). */
+  seed?: AppState;
+  /** false면 상태 변경을 localStorage에 저장하지 않는다. */
+  persist?: boolean;
+  /** false면 기능 이동을 지표로 기록하지 않는다(랜딩 데모 모달용). */
+  track?: boolean;
+}) {
+  const [state, setState] = useState<AppState>(() => seed ?? loadState());
   const [page, setPage] = useState<PageKey>("dashboard");
   const [navOptions, setNavOptions] = useState<NavOptions>({});
   const [detailBlockId, setDetailBlockId] = useState<string | null>(null);
@@ -71,15 +87,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   stateRef.current = state;
 
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    if (persist) saveState(state);
+  }, [state, persist]);
 
-  const navigate = useCallback((p: PageKey, options?: NavOptions) => {
-    setPage(p);
-    setNavOptions(options ?? {});
-    if (options?.blockId) setDetailBlockId(options.blockId);
-    window.scrollTo(0, 0);
-  }, []);
+  const navigate = useCallback(
+    (p: PageKey, options?: NavOptions) => {
+      if (track) trackEvent("app_feature", p);
+      setPage(p);
+      setNavOptions(options ?? {});
+      if (options?.blockId) setDetailBlockId(options.blockId);
+      window.scrollTo(0, 0);
+    },
+    [track]
+  );
 
   const openBlockDetail = useCallback((id: string | null) => setDetailBlockId(id), []);
 

@@ -2,7 +2,7 @@ import { useApp } from "../context/AppContext";
 
 /**
  * 서비스 소개 페이지.
- * 로어블록의 핵심 가치, 타겟, 비즈니스 모델, 수익 구조를
+ * 노벨 바이블의 핵심 가치, 타겟, 비즈니스 모델, 수익 구조를
  * 투자자·파트너에게 보여주듯 한 페이지로 정리한다.
  */
 
@@ -45,9 +45,9 @@ const VALUES = [
   },
   {
     step: "확장",
-    icon: "✨",
-    title: "서브 스토리 생성",
-    desc: "기존 세계관을 그대로 지키는 외전·서브 스토리 시나리오를 AI가 함께 만듭니다.",
+    icon: "💡",
+    title: "관계별 시나리오 추천",
+    desc: "기존 세계관을 지키면서, 인물 관계별로 다음 이야기의 방향과 키워드를 추천합니다. 글은 작가가 직접 씁니다.",
   },
 ];
 
@@ -88,7 +88,8 @@ const PLANS = [
       "작품 무제한",
       "설정 카드 무제한",
       "실시간 설정 지킴이 (집필 중 오류 감지)",
-      "서브 스토리 시나리오 생성",
+      "회차별 세계관 지도",
+      "관계별 시나리오 추천",
       "떡밥 회수 추적",
     ],
     highlight: true,
@@ -144,18 +145,18 @@ export default function About() {
           <h1 className="text-3xl font-extrabold leading-snug text-stone-800 lg:text-4xl">
             작가의 세계관을 기억하는
             <br />
-            AI 에이전트, <span className="text-amber-700">로어블록</span>
+            AI 에이전트, <span className="text-amber-700">노벨 바이블</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-stone-600">
             작가가 입력한 세계관과 원고를 학습한 AI가 인물·사건·설정을 기억하고, 글쓰기
-            오류를 방지하며, 세계관을 지키는 서브 스토리까지 만들어 줍니다.
+            오류를 방지하며, 세계관을 지키는 다음 이야기의 방향까지 추천해 줍니다.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <button className="btn-primary px-7 py-3 text-lg" onClick={() => navigate("dashboard")}>
               체험해 보기 →
             </button>
-            <button className="btn-ghost px-7 py-3 text-lg" onClick={() => navigate("scenario")}>
-              ✨ 에피소드 생성 보기
+            <button className="btn-ghost px-7 py-3 text-lg" onClick={() => navigate("atlas")}>
+              🗺️ 세계관 지도 보기
             </button>
           </div>
         </div>
@@ -167,7 +168,7 @@ export default function About() {
           연재가 길어질수록, 설정은 무너집니다
         </h2>
         <p className="mb-5 text-center text-base text-stone-500">
-          로어블록이 해결하는 세 가지 고질병
+          노벨 바이블이 해결하는 세 가지 고질병
         </p>
         <div className="grid gap-4 md:grid-cols-3">
           {PAIN_POINTS.map((p) => (
@@ -282,7 +283,7 @@ export default function About() {
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-stone-600">
             웹소설·웹툰 시장은 원작 IP의 2차 창작(웹툰화·영상화)으로 빠르게 확장되고
             있습니다. IP가 커질수록 <b className="text-stone-800">세계관 정합성</b>은 작품의
-            품질이자 자산이 됩니다. 로어블록은 그 정합성을 지키는 가장 가까운 도구로,
+            품질이자 자산이 됩니다. 노벨 바이블은 그 정합성을 지키는 가장 가까운 도구로,
             작가의 첫 화면에서 시작합니다.
           </p>
           <button

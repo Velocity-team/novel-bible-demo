@@ -76,6 +76,65 @@ export interface Episode {
   number: number;
   summary: string;
   wordCount: number;
+  /** 회차 시점의 작품 속 시간(연도·계절) */
+  date?: WorldDate;
+}
+
+/** 작품 속(인게임) 시간. 동화라 연·월 대신 연도 차수와 계절로 표현한다. */
+export interface WorldDate {
+  /** 작품 1년차 = 1, 이듬해 = 2 … */
+  year: number;
+  /** 봄·여름·가을·겨울 */
+  season: "봄" | "여름" | "가을" | "겨울";
+  /** HUD에 덧붙일 짧은 설명 (예: "쫓겨난 해") */
+  label?: string;
+}
+
+// ── 회차별 세계관 지도(아틀라스) 전용 타입 ──────────────────
+
+export type Tile =
+  | "void"
+  | "grass"
+  | "soil"
+  | "path"
+  | "floor"
+  | "wall"
+  | "water"
+  | "sand"
+  | "tree"
+  | "rice"
+  | "gourd"
+  | "pot";
+
+/** 흥부네 초가집·놀부네 기와집·강남 같은 큰 장소 단위 */
+export interface MapZone {
+  id: string;
+  kind: "home" | "village" | "faraway";
+  name: string;
+  /** 연결된 장소 설정 카드 id (있으면 클릭 시 설정 카드 열기) */
+  blockId?: string;
+  /** 한 줄 설명 (HUD에 표시) */
+  blurb: string;
+}
+
+/** 한 zone의 실제 타일 배치(2D 맵). grid[y][x] */
+export interface StageMap {
+  id: string;
+  zoneId: string;
+  name: string;
+  width: number;
+  height: number;
+  grid: Tile[][];
+}
+
+/** 특정 회차에 어떤 캐릭터가 어느 zone의 어디(x,y)에서 무엇을 하는지 */
+export interface CharacterPlacement {
+  episodeId: string;
+  characterId: string;
+  zoneId: string;
+  x: number;
+  y: number;
+  activity: string;
 }
 
 export interface Project {
@@ -160,6 +219,10 @@ export interface AppState {
   checkedSuggestions: string[];
   canonScore: number;
   lastTrainedAt: string;
+  /** 회차별 세계관 지도 데이터 */
+  zones: MapZone[];
+  stages: StageMap[];
+  placements: CharacterPlacement[];
 }
 
 export type PageKey =
@@ -173,4 +236,61 @@ export type PageKey =
   | "ask"
   | "conflicts"
   | "settings"
-  | "about";
+  | "about"
+  | "atlas"
+  | "plotroom";
+
+// ── PlotRoom 전용 타입 ─────────────────────────────────────
+
+export interface CharacterPersona {
+  characterId: string;
+  speechStyle: string;
+  personality: string[];
+  goals: string[];
+  coreMemories: { episode: string; content: string }[];
+  forbiddenActions: string[];
+  ragSources: string[];
+}
+
+export interface MeetingTurn {
+  characterId: string;
+  characterName: string;
+  emotion: string;
+  statement: string;
+  internalThought?: string;
+  ragEpisodes: string[];
+  isAction?: boolean;
+}
+
+export type SubstoryType =
+  | "감정선 보강형"
+  | "관계 변화형"
+  | "복선 회수형"
+  | "갈등 확장형"
+  | "코미디 완충형";
+
+export type RiskLevel = "낮음" | "중간" | "높음";
+
+export interface SubstoryCandidate {
+  id: string;
+  type: SubstoryType;
+  title: string;
+  summary: string;
+  keyMoment: string;
+  riskLevel: RiskLevel;
+  riskReason: string;
+  relatedCharacterIds: string[];
+  relatedEpisodes: string[];
+  /** 이 추천이 다루는 인물 관계 (예: "흥부 ↔ 흥부 아내") */
+  relationLabel: string;
+  /** 방향을 한눈에 보여 주는 키워드 묶음 */
+  keywords: string[];
+}
+
+/** 캐릭터 회의 결과를 키워드 중심으로 요약한 묶음 */
+export interface MeetingKeywordSummary {
+  /** 회의에서 뽑힌 핵심 키워드 */
+  keywords: string[];
+  /** 관계별로 정리한 한 줄 관찰 */
+  relationInsights: { relation: string; note: string }[];
+}

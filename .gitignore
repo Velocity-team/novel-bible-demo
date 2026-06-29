@@ -4,3 +4,9 @@ dist/
 *.local
 .env
 .env.*
+
+# Local Netlify folder
+.netlify
+
+# Local Netlify/Deno dev artifact
+deno.lock

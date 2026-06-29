@@ -11,7 +11,7 @@ const MODES: { key: GraphMode; label: string; hint: string }[] = [
   { key: "memory", label: "🧠 전체 보기", hint: "저장된 모든 설정 카드와 관계를 보여줍니다." },
   { key: "focus", label: "🎯 인물 중심 보기", hint: "고른 인물과 바로 연결된 카드만 또렷하게 보여줍니다." },
   { key: "conflict", label: "🚨 오류 위험 보기", hint: "설정 오류와 얽힌 카드를 빨간색으로 표시합니다." },
-  { key: "scenario", label: "✨ 에피소드 경로 보기", hint: "최근 AI와 만든 에피소드에 쓰인 카드를 순서대로 표시합니다." },
+  { key: "scenario", label: "✨ 추천 시나리오 보기", hint: "최근 저장한 ‘관계별 시나리오 추천 메모’에 묶인 카드를 표시합니다." },
 ];
 
 const TYPE_FILTERS: { key: BlockType | "all"; label: string }[] = [
@@ -60,7 +60,9 @@ export default function WorldMap() {
     [state.conflicts]
   );
 
-  const lastScenario = state.scenarios[state.scenarios.length - 1];
+  // 추천 시나리오 메모(캐릭터 회의실에서 저장)에 묶인 카드를 경로로 본다
+  const recNotes = state.notes.filter((n) => n.title.startsWith("시나리오 방향 메모"));
+  const lastScenario = recNotes[recNotes.length - 1];
   const selected = state.blocks.find((b) => b.id === selectedId) ?? null;
   const selectedRelations = selected
     ? state.relations.filter((r) => r.sourceId === selected.id || r.targetId === selected.id)
@@ -136,7 +138,7 @@ export default function WorldMap() {
         </div>
         <p className="text-sm text-stone-500">
           {MODES.find((m) => m.key === mode)?.hint}
-          {mode === "scenario" && !lastScenario && " (아직 만든 에피소드가 없습니다. ‘새 에피소드 만들기’에서 먼저 만들어 보세요.)"}
+          {mode === "scenario" && !lastScenario && " (아직 저장한 추천 시나리오가 없습니다. ‘캐릭터 회의실 › 관계별 시나리오 추천’에서 방향을 받아 메모로 저장해 보세요.)"}
         </p>
       </div>
 
@@ -147,7 +149,7 @@ export default function WorldMap() {
           conflictBlockIds={conflictBlockIds}
           mode={mode}
           focusId={mode === "focus" ? focusCharId : null}
-          scenarioBlockIds={mode === "scenario" ? lastScenario?.includedBlockIds ?? [] : []}
+          scenarioBlockIds={mode === "scenario" ? lastScenario?.relatedBlockIds ?? [] : []}
           typeFilter={typeFilter}
           searchQuery={search}
           selectedId={selectedId}

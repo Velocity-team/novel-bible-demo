@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { ONBOARDING_FILES, type OnboardingFile } from "../data/mockData";
+import { MANUSCRIPT_TOTAL, ONBOARDING_FILES, type OnboardingFile } from "../data/mockData";
 
 /**
  * 처음 사용하는 작가를 위한 시작 화면.
@@ -14,9 +14,19 @@ const LEARN_STEPS = [
   { label: "설정끼리 어긋나는 곳을 검사하고 있어요", icon: "🔍" },
 ];
 
-export default function Onboarding() {
+export default function Onboarding({
+  initialStep = 0,
+  onComplete,
+  onExit,
+}: {
+  /** 데모 진입 시 작품 등록(1)부터 시작하도록 */
+  initialStep?: number;
+  onComplete?: () => void;
+  /** 로고를 누르면 랜딩으로 */
+  onExit?: () => void;
+} = {}) {
   const { completeOnboarding } = useApp();
-  const [step, setStep] = useState(0); // 0 소개, 1 작품 정보, 2 파일, 3 학습
+  const [step, setStep] = useState(initialStep); // 0 소개, 1 작품 정보, 2 파일, 3 학습
   const [form, setForm] = useState({
     title: "흥부와 놀부",
     genre: "전래동화 / 가족 / 권선징악",
@@ -24,25 +34,24 @@ export default function Onboarding() {
       "욕심 많은 형 놀부에게 쫓겨난 착한 동생 흥부가, 다친 제비를 구해 준 보답으로 받은 박씨 덕분에 복을 받는 이야기",
   });
   const [dropped, setDropped] = useState<string[]>([]);
-  const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
   const [learnStep, setLearnStep] = useState(0);
   const timers = useRef<number[]>([]);
 
-  const remaining = ONBOARDING_FILES.filter((f) => !dropped.includes(f.id));
   const droppedFiles = ONBOARDING_FILES.filter((f) => dropped.includes(f.id));
+
+  // 원고 1~100편을 모두 보여 주고, '원고 전부 추가' 버튼으로 한 번에 올린다(드래그 없음).
+  const manuscripts = ONBOARDING_FILES.filter((f) => f.kind === "원고");
+  const allDropped = dropped.length >= ONBOARDING_FILES.length;
+  const droppedManuCount = droppedFiles.filter((f) => f.kind === "원고").length;
+  const droppedExtraCount = droppedFiles.filter((f) => f.kind !== "원고").length;
+  const manuscriptsReady = droppedManuCount >= MANUSCRIPT_TOTAL;
+  const addAllFiles = () => setDropped(ONBOARDING_FILES.map((f) => f.id));
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const addFile = (id: string) =>
     setDropped((prev) => (prev.includes(id) ? prev : [...prev, id]));
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const id = e.dataTransfer.getData("text/plain");
-    if (id) addFile(id);
-  };
 
   const startLearning = () => {
     setStep(3);
@@ -62,43 +71,53 @@ export default function Onboarding() {
       timers.current.push(window.setTimeout(() => setLearnStep(i), (total / 4) * i));
     });
     timers.current.push(
-      window.setTimeout(() => completeOnboarding(form), total + 400)
+      window.setTimeout(() => {
+        completeOnboarding(form);
+        onComplete?.();
+      }, total + 400)
     );
   };
 
-  const FileChip = ({ f, draggable }: { f: OnboardingFile; draggable?: boolean }) => (
-    <div
-      draggable={draggable}
-      onDragStart={(e) => e.dataTransfer.setData("text/plain", f.id)}
-      onClick={() => draggable && addFile(f.id)}
-      className={`flex items-center gap-3 rounded-xl border border-paper-300 bg-white px-4 py-3 shadow-card ${
-        draggable ? "cursor-grab transition hover:shadow-card-hover active:cursor-grabbing" : ""
-      }`}
-      title={draggable ? "끌어다 놓거나 클릭하면 추가됩니다" : undefined}
-    >
-      <span className="text-2xl">{f.icon}</span>
-      <div className="min-w-0">
-        <div className="truncate text-base font-semibold text-stone-800">{f.name}</div>
-        <div className="text-sm text-stone-500">
-          {f.kind} · {f.detail}
+  const FileBox = ({ f }: { f: OnboardingFile }) => {
+    const added = dropped.includes(f.id);
+    return (
+      <button
+        type="button"
+        onClick={() => addFile(f.id)}
+        className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
+          added ? "border-amber-400 bg-amber-50" : "border-paper-300 bg-white hover:border-amber-300"
+        }`}
+      >
+        <span className="text-xl">{f.icon}</span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-stone-800">{f.name}</div>
+          <div className="text-xs text-stone-500">
+            {f.kind} · {f.detail}
+          </div>
         </div>
-      </div>
-    </div>
-  );
+        {added && <span className="shrink-0 font-bold text-amber-600">✓</span>}
+      </button>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#faf6ef] px-4 py-10">
       <div className="mx-auto w-full max-w-3xl">
-        {/* 로고 */}
-        <div className="mb-8 flex items-center justify-center gap-3">
+        {/* 로고 (누르면 랜딩으로) */}
+        <button
+          type="button"
+          onClick={onExit}
+          className="mx-auto mb-8 flex items-center justify-center gap-3"
+          title="노벨 바이블 첫 화면으로"
+        >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-2xl shadow-card">
             📚
           </div>
-          <div>
-            <div className="text-2xl font-extrabold text-stone-800">로어블록</div>
+          <div className="text-left">
+            <div className="text-2xl font-extrabold text-stone-800">노벨 바이블</div>
             <div className="text-sm text-stone-500">작가를 위한 세계관 기록 도우미</div>
           </div>
-        </div>
+        </button>
 
         {/* 진행 단계 표시 */}
         {step < 3 && (
@@ -135,13 +154,13 @@ export default function Onboarding() {
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-stone-600">
               소설을 쓰다 보면 인물 나이, 사건 순서, 세계관 규칙이 헷갈리기 쉽습니다.
-              로어블록에 원고와 설정을 넣어 두면, 글을 쓸 때 꺼내 보고, 새 에피소드를
+              노벨 바이블에 원고와 설정을 넣어 두면, 글을 쓸 때 꺼내 보고, 새 에피소드를
               만들 때 도움을 받고, 놓친 부분이 없는지 검사할 수 있어요.
             </p>
             <div className="mt-8 grid gap-4 text-left sm:grid-cols-3">
               {[
                 { icon: "🗂️", title: "1. 저장하고 정리하기", desc: "원고를 올리면 인물·장소·사건·규칙이 설정 카드로 정리됩니다." },
-                { icon: "✨", title: "2. 새 에피소드 만들기", desc: "저장된 설정을 지키면서 다음 이야기 초안을 AI가 함께 만듭니다." },
+                { icon: "💡", title: "2. 관계별 시나리오 추천", desc: "저장된 설정을 지키며 다음 이야기의 방향과 키워드를 추천받습니다. 글은 작가가 씁니다." },
                 { icon: "🚨", title: "3. 놓친 부분 검사하기", desc: "설정끼리 어긋나는 부분을 AI가 찾아내고 고치는 방법을 알려 줍니다." },
               ].map((c) => (
                 <div key={c.title} className="rounded-2xl bg-paper-100 p-5">
@@ -163,8 +182,13 @@ export default function Onboarding() {
             <div>
               <h2 className="text-2xl font-extrabold text-stone-800">어떤 작품인가요?</h2>
               <p className="mt-1 text-base text-stone-500">
-                체험용으로 동화 「흥부와 놀부」가 미리 채워져 있어요. 그대로 진행해도 됩니다.
+                작품 정보를 적어 두면, AI가 그 작품을 기억할 준비를 합니다.
               </p>
+            </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-base leading-relaxed text-amber-900">
+              💡 <b>지금은 미리 둘러보는 체험 화면이에요.</b> 이해를 돕기 위해 누구나 아는 옛이야기
+              「흥부와 놀부」를 <b>예시로 미리 채워 두었습니다.</b> 직접 입력하실 필요 없이,
+              아래 <b>‘다음 →’</b> 버튼만 누르면 체험이 이어집니다. (원하시면 내 작품 정보로 바꿔 적어도 됩니다.)
             </div>
             <div>
               <label className="label">작품 제목</label>
@@ -216,63 +240,58 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="fade-up space-y-5">
             <div className="card p-8">
-              <h2 className="text-2xl font-extrabold text-stone-800">
-                원고와 설정 자료를 넣어 주세요
-              </h2>
-              <p className="mt-1 text-base text-stone-500">
-                지금까지 쓴 원고, 설정을 정리해 둔 표나 메모를 모두 넣으면 AI가 한 번에
-                학습합니다. (체험용 가상 파일입니다 — 끌어다 놓거나 클릭하세요)
-              </p>
-
-              <div className="mt-5 grid gap-5 md:grid-cols-2">
-                {/* 내 컴퓨터의 파일 (가상) */}
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="label">내 컴퓨터의 파일</div>
-                  <div className="space-y-2">
-                    {remaining.map((f) => (
-                      <FileChip key={f.id} f={f} draggable />
-                    ))}
-                    {remaining.length === 0 && (
-                      <p className="rounded-xl bg-paper-100 p-4 text-base text-stone-500">
-                        모든 파일을 넣었어요! 👏
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* 드롭존 */}
-                <div>
-                  <div className="label">여기에 끌어다 놓기</div>
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setDragOver(true);
-                    }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={onDrop}
-                    className={`flex min-h-[260px] flex-col gap-2 rounded-2xl border-4 border-dashed p-4 transition ${
-                      dragOver
-                        ? "border-amber-500 bg-amber-50"
-                        : "border-paper-300 bg-paper-100"
-                    }`}
-                  >
-                    {droppedFiles.length === 0 ? (
-                      <div className="flex flex-1 flex-col items-center justify-center text-center">
-                        <span className="text-4xl">📥</span>
-                        <p className="mt-2 text-base text-stone-500">
-                          왼쪽 파일을 여기로
-                          <br />
-                          끌어다 놓으세요
-                        </p>
-                      </div>
-                    ) : (
-                      droppedFiles.map((f) => <FileChip key={f.id} f={f} />)
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm text-stone-500">
-                    {droppedFiles.length}/{ONBOARDING_FILES.length}개 추가됨
+                  <h2 className="text-2xl font-extrabold text-stone-800">
+                    원고를 올려 주세요
+                  </h2>
+                  <p className="mt-1 text-base text-stone-500">
+                    지금까지 쓴 원고 {MANUSCRIPT_TOTAL}편을 한 번에 올려 AI에게 학습시킵니다. (체험용
+                    예시 파일이에요 — 아래 <b>‘원고 전부 추가’</b> 버튼만 누르면 됩니다)
                   </p>
                 </div>
+                <button
+                  className="btn-primary whitespace-nowrap px-7 py-3 text-lg"
+                  onClick={startLearning}
+                  disabled={droppedFiles.length === 0}
+                >
+                  🧠 AI 학습 시작
+                </button>
+              </div>
+
+              {/* 큰 '원고 전부 추가' 버튼 */}
+              <button
+                type="button"
+                onClick={addAllFiles}
+                disabled={allDropped}
+                className={`mt-5 w-full rounded-2xl py-5 text-xl font-extrabold shadow-card transition ${
+                  allDropped
+                    ? "cursor-default bg-emerald-100 text-emerald-800"
+                    : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:brightness-105"
+                }`}
+              >
+                {allDropped
+                  ? `✓ 원고 ${MANUSCRIPT_TOTAL}편 모두 추가됨`
+                  : "📥 원고 전부 추가하기"}
+              </button>
+              <p className="mt-2 text-center text-sm text-stone-500">
+                {droppedFiles.length === 0
+                  ? `버튼을 누르면 1~${MANUSCRIPT_TOTAL}화 원고가 한 번에 올라갑니다`
+                  : `원고 ${droppedManuCount}편 · 그 외 자료 ${droppedExtraCount}건 추가됨`}
+              </p>
+
+              {/* 내 컴퓨터의 원고 (1~100편 전부) */}
+              <div className="mt-5">
+                <div className="label">내 컴퓨터의 원고 (총 {MANUSCRIPT_TOTAL}편)</div>
+                <div className="grid max-h-[420px] gap-2 overflow-y-auto rounded-2xl border border-paper-300 bg-paper-100 p-3 sm:grid-cols-2">
+                  {manuscripts.map((f) => (
+                    <FileBox key={f.id} f={f} />
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-stone-400">
+                  설정 정리표·인물 메모도 ‘원고 전부 추가’에 함께 포함됩니다. (목록을 눌러 하나씩
+                  추가할 수도 있어요)
+                </p>
               </div>
             </div>
 
@@ -280,32 +299,36 @@ export default function Onboarding() {
               <button className="btn-ghost" onClick={() => setStep(1)}>
                 ← 이전
               </button>
-              <div className="flex items-center gap-3">
-                {remaining.length > 0 && (
-                  <button className="btn-ghost" onClick={() => setDropped(ONBOARDING_FILES.map((f) => f.id))}>
-                    전부 추가
-                  </button>
-                )}
-                <button
-                  className="btn-primary px-8 py-3 text-lg"
-                  onClick={startLearning}
-                  disabled={droppedFiles.length === 0}
-                >
-                  🧠 AI 학습 시작
-                </button>
-              </div>
             </div>
           </div>
         )}
 
         {/* ④ 학습 진행 */}
+        {step === 2 && manuscriptsReady && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-emerald-200 bg-white/95 px-4 py-3 shadow-[0_-14px_40px_rgba(41,37,36,0.16)] backdrop-blur">
+            <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-bold text-emerald-700">원고 {MANUSCRIPT_TOTAL}편 추가 완료</div>
+                <div className="text-base font-extrabold text-stone-800">이제 AI가 작품을 학습할 준비가 끝났어요.</div>
+              </div>
+              <button
+                type="button"
+                className="btn-primary min-h-14 shrink-0 px-8 text-lg shadow-card-hover"
+                onClick={startLearning}
+              >
+                🧠 AI 학습 시작
+              </button>
+            </div>
+          </div>
+        )}
+
         {step === 3 && (
           <div className="fade-up card p-10 text-center">
             <h2 className="text-2xl font-extrabold text-stone-800">
               「{form.title}」을(를) 학습하고 있어요
             </h2>
             <p className="mt-2 text-base text-stone-500">
-              넣어 주신 파일 {droppedFiles.length}개에서 설정을 뽑아내는 중입니다.
+              넣어 주신 원고 {droppedManuCount}편에서 설정을 뽑아내는 중입니다.
             </p>
 
             <div className="mx-auto mt-8 max-w-md">

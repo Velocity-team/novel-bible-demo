@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SeverityBadge, TypeBadge } from "../components/Badge";
 import { BLOCK_TYPE_META } from "../components/meta";
 import StatCard from "../components/StatCard";
@@ -38,10 +38,117 @@ function HealthCard({
   );
 }
 
+/** 인물 토큰 (세계관 지도와 동일) */
+const CHAR_TOKEN: Record<string, string> = {
+  c1: "🙂",
+  c2: "😤",
+  c3: "👩",
+  c4: "👩‍🦰",
+  c5: "🐦",
+};
+
+/** 최신 회차 기준으로 "지금 누가 어디서 무엇을" 하고 있었는지 브리핑하는 카드 */
+function SituationBriefing() {
+  const { state, navigate, openBlockDetail } = useApp();
+  const { project, blocks } = state;
+
+  const episodes = [...project.episodes].sort((a, b) => a.number - b.number);
+  const latest = episodes[episodes.length - 1];
+  if (!latest) return null;
+
+  const placements = state.placements.filter((p) => p.episodeId === latest.id);
+  const zoneName = (id: string) => state.zones.find((z) => z.id === id)?.name ?? id;
+  const blockOf = (id: string) => blocks.find((b) => b.id === id);
+
+  // 장소별로 인물 묶기
+  const byZone = new Map<string, typeof placements>();
+  for (const p of placements) {
+    const arr = byZone.get(p.zoneId) ?? [];
+    arr.push(p);
+    byZone.set(p.zoneId, arr);
+  }
+
+  const d = latest.date;
+  const dateLine = d ? `작품 ${d.year}년차 · ${d.season}` : "시간 미상";
+
+  return (
+    <section className="card relative overflow-hidden p-6 lg:p-7">
+      <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">📡</span>
+            <h2 className="text-xl font-extrabold text-stone-800">현재 상황 브리핑</h2>
+            <span className="chip bg-amber-100 text-amber-900">최신 회차 기준</span>
+          </div>
+          <button
+            className="text-sm font-semibold text-amber-700 hover:underline"
+            onClick={() => navigate("atlas")}
+          >
+            세계관 지도에서 보기 →
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[260px_1fr]">
+          {/* 시간 + 마지막 내용 */}
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs font-bold uppercase tracking-widest text-amber-600">
+              작품 속 시간
+            </div>
+            <div className="mt-0.5 text-2xl font-extrabold text-stone-800">{dateLine}</div>
+            <div className="mt-1 text-sm font-semibold text-stone-600">{latest.title}</div>
+            <p className="mt-3 text-base leading-relaxed text-stone-500">
+              <span className="font-bold text-stone-700">마지막 내용 — </span>
+              {latest.summary}
+            </p>
+          </div>
+
+          {/* 누가 어디서 무엇을 하다 끝났는지 */}
+          <div className="space-y-2">
+            <div className="label mb-0">이 회차가 끝난 시점, 누가 어디서 무엇을</div>
+            {[...byZone.entries()].map(([zid, ps]) => (
+              <div key={zid} className="rounded-xl border border-paper-300 bg-paper-100 p-3">
+                <div className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-amber-700">
+                  <span>📍</span> {zoneName(zid)}
+                </div>
+                <ul className="space-y-1">
+                  {ps.map((p) => {
+                    const b = blockOf(p.characterId);
+                    return (
+                      <li
+                        key={p.characterId}
+                        className="flex cursor-pointer items-start gap-2 text-base text-stone-700 hover:text-amber-700"
+                        onClick={() => openBlockDetail(p.characterId)}
+                      >
+                        <span className="shrink-0">{CHAR_TOKEN[p.characterId] ?? "🧭"}</span>
+                        <span>
+                          <b className="text-stone-800">{b?.name ?? p.characterId}</b>
+                          <span className="text-stone-500"> — {p.activity}</span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            {placements.length === 0 && (
+              <p className="rounded-xl bg-paper-100 p-3 text-base text-stone-500">
+                이 회차의 위치 데이터가 아직 없습니다.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Dashboard() {
   const { state, navigate, openBlockDetail } = useApp();
   const { blocks, relations, conflicts, project } = state;
   const report = useMemo(() => simulateConsistency(state), [state]);
+  // '지금 쓰고 있는 작품'부터 아래 내용은 기본 접힘 (대시보드 정보량 줄이기)
+  const [showMore, setShowMore] = useState(false);
 
   const count = (t: string) => blocks.filter((b) => b.type === t).length;
   const openConflicts = conflicts.filter((c) => c.status === "open");
@@ -77,12 +184,12 @@ export default function Dashboard() {
       action: () => navigate("import"),
       cta: "원고 올리기",
     });
-  if (state.scenarios.length === 0)
+  if (!state.notes.some((n) => n.title.startsWith("시나리오 방향 메모")))
     todos.push({
-      icon: "✨",
-      text: "아직 AI와 함께 만든 새 에피소드가 없어요. 한번 만들어 볼까요?",
-      action: () => navigate("scenario"),
-      cta: "에피소드 만들기",
+      icon: "💡",
+      text: "아직 받아 본 관계별 시나리오 추천이 없어요. 캐릭터 회의실에서 방향을 받아 볼까요?",
+      action: () => navigate("plotroom", { plotTab: "recommend" }),
+      cta: "시나리오 추천 받기",
     });
 
   const canonLevel: HealthLevel =
@@ -96,9 +203,23 @@ export default function Dashboard() {
 
   return (
     <div className="fade-up space-y-6">
-      {/* 설정 지도: 서비스를 열면 가장 먼저 보이는 핵심 화면 */}
+      {/* 최신 회차 기준 현재 상황 브리핑: 가장 먼저 보이는 요약 */}
+      <SituationBriefing />
+
+      {/* 설정 지도: 인물·장소·사건 관계망 */}
       <WorldMap />
 
+      {/* 작품 정보·점검·통계는 토글로 접어 둔다 */}
+      <button
+        className="flex w-full items-center justify-between rounded-2xl border border-paper-300 bg-white px-5 py-3.5 text-left text-lg font-bold text-stone-700 shadow-card transition hover:bg-paper-100"
+        onClick={() => setShowMore((v) => !v)}
+      >
+        <span>📂 작품 정보 · 집필 점검 · 통계 {showMore ? "접기" : "펼치기"}</span>
+        <span className="text-stone-400">{showMore ? "▲" : "▼"}</span>
+      </button>
+
+      {showMore && (
+        <>
       {/* 작품 카드 + 작업 흐름 */}
       <section className="card relative overflow-hidden p-7">
         <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-amber-200/50 blur-3xl" />
@@ -122,11 +243,11 @@ export default function Dashboard() {
             </button>
             <button
               className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-left transition hover:bg-emerald-100"
-              onClick={() => navigate("scenario")}
+              onClick={() => navigate("plotroom", { plotTab: "recommend" })}
             >
-              <div className="text-2xl">✨</div>
-              <div className="mt-1 text-lg font-bold text-stone-800">② 새 에피소드 만들기</div>
-              <p className="text-base text-stone-600">저장된 설정을 지키는 다음 이야기를 AI와 함께 만들어요.</p>
+              <div className="text-2xl">💡</div>
+              <div className="mt-1 text-lg font-bold text-stone-800">② 관계별 시나리오 추천</div>
+              <p className="text-base text-stone-600">저장된 설정을 지키며 다음 이야기의 방향과 키워드를 추천받아요.</p>
             </button>
             <button
               className="rounded-2xl border-2 border-red-300 bg-red-50 p-4 text-left transition hover:bg-red-100"
@@ -241,6 +362,8 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+        </>
+      )}
     </div>
   );
 }

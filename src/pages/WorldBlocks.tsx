@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BlockCard from "../components/BlockCard";
 import { BLOCK_TYPE_META } from "../components/meta";
 import Modal from "../components/Modal";
 import { useApp } from "../context/AppContext";
 import type { BlockType } from "../types";
+import RelationBuilder from "./RelationBuilder";
 
 const TYPE_FILTERS: { key: BlockType | "all"; label: string }[] = [
   { key: "all", label: "전체" },
@@ -16,7 +17,14 @@ const TYPE_FILTERS: { key: BlockType | "all"; label: string }[] = [
 ];
 
 export default function WorldBlocks() {
-  const { state, detailBlockId, openBlockDetail, addBlock, navOptions } = useApp();
+  const { state, detailBlockId, openBlockDetail, addBlock, navOptions, page } = useApp();
+  // 설정 사전 안에 '관계 만들기'를 탭으로 합쳤다.
+  const [tab, setTab] = useState<"cards" | "relations">(
+    page === "relations" ? "relations" : "cards"
+  );
+  useEffect(() => {
+    setTab(page === "relations" ? "relations" : "cards");
+  }, [page]);
   const [typeFilter, setTypeFilter] = useState<BlockType | "all">("all");
   const [query, setQuery] = useState(navOptions.query ?? "");
   const [tagFilter, setTagFilter] = useState("");
@@ -78,6 +86,28 @@ export default function WorldBlocks() {
 
   return (
     <div className="fade-up space-y-5">
+      {/* 설정 카드 / 관계 만들기 전환 */}
+      <div className="flex gap-1 rounded-2xl border border-paper-300 bg-paper-100 p-1.5">
+        {([
+          ["cards", "🗂️ 설정 카드"],
+          ["relations", "🔗 관계 만들기"],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setTab(k)}
+            className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              tab === k ? "bg-white text-stone-800 shadow-card" : "text-stone-500 hover:text-stone-700"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "relations" && <RelationBuilder />}
+
+      {tab === "cards" && (
+      <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold text-stone-800">설정 사전</h2>
@@ -212,6 +242,8 @@ export default function WorldBlocks() {
           </button>
         </div>
       </Modal>
+      </div>
+      )}
     </div>
   );
 }

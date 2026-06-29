@@ -142,17 +142,19 @@ export default function NewWriting() {
               />
             </div>
           </div>
-          <textarea
-            className="input min-h-[380px] flex-1 font-[inherit] text-lg leading-8"
-            placeholder={
-              "여기에 새 장면을 써 보세요…\n\n이렇게 써 보면 경고를 볼 수 있어요:\n· “왼쪽 다리를 다쳤던 제비” → 다리 방향 경고\n· “한여름에 박을 탔다” → 박 타기 규칙 경고\n· “아홉 남매” → 자식 수 경고"
-            }
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              setAnalysisDone(false);
-            }}
-          />
+          <div className="relative flex-1">
+            <textarea
+              className="input min-h-[380px] w-full resize-none text-lg leading-8"
+              placeholder={
+                "여기에 새 장면을 써 보세요…\n\n이렇게 써 보면 경고를 볼 수 있어요:\n· “왼쪽 다리를 다쳤던 제비” → 다리 방향 경고\n· “한여름에 박을 탔다” → 박 타기 규칙 경고\n· “아홉 남매” → 자식 수 경고"
+              }
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setAnalysisDone(false);
+              }}
+            />
+          </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button className="btn-primary" onClick={handleSave}>
               {savedFlash ? "✓ 저장됐어요!" : "💾 글 저장"}

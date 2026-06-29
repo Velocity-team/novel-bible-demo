@@ -1,6 +1,11 @@
 [build]
-  command = "npm run build"
+  # 번들링은 vite(esbuild)가 담당. 타입체크(tsc)는 로컬 CI에서 수행하며
+  # 배포 빌드에서는 환경별 tsc 편차를 피하기 위해 제외한다.
+  command = "npx vite build"
   publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
 
 [[redirects]]
   from = "/*"

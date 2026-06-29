@@ -248,25 +248,25 @@ export default function ProjectSettings() {
         <div className="flex flex-wrap gap-2">
           <button
             className="btn-ghost"
-            onClick={() => downloadJSON("loreblock-설정카드.json", state.blocks)}
+            onClick={() => downloadJSON("노벨바이블-설정카드.json", state.blocks)}
           >
             설정 카드 내려받기
           </button>
           <button
             className="btn-ghost"
-            onClick={() => downloadJSON("loreblock-관계.json", state.relations)}
+            onClick={() => downloadJSON("노벨바이블-관계.json", state.relations)}
           >
             관계 내려받기
           </button>
           <button
             className="btn-ghost"
-            onClick={() => downloadJSON("loreblock-설정오류.json", state.conflicts)}
+            onClick={() => downloadJSON("노벨바이블-설정오류.json", state.conflicts)}
           >
             설정 오류 내려받기
           </button>
           <button
             className="btn-green"
-            onClick={() => downloadJSON("loreblock-작품전체.json", state)}
+            onClick={() => downloadJSON("노벨바이블-작품전체.json", state)}
           >
             📦 작품 전체 내려받기
           </button>

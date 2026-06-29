@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { excelPreviewRows, excelRelationRows } from "../data/mockData";
 import {
@@ -6,6 +6,7 @@ import {
   type AnalysisResult,
 } from "../utils/aiSim";
 import type { BlockType } from "../types";
+import NewWriting from "./NewWriting";
 
 const TABS = [
   { key: "file", label: "📄 파일 올리기" },
@@ -29,7 +30,12 @@ const CANDIDATE_META: Record<string, { label: string; icon: string }> = {
 };
 
 export default function ManuscriptImport() {
-  const { state, navigate, addBlock, addRelation, addMemorySource } = useApp();
+  const { state, navigate, addBlock, addRelation, addMemorySource, page } = useApp();
+  // 원고·설정 불러오기 안에 '새 회차 쓰기'를 탭으로 합쳤다.
+  const [mode, setMode] = useState<"import" | "writing">(page === "writing" ? "writing" : "import");
+  useEffect(() => {
+    setMode(page === "writing" ? "writing" : "import");
+  }, [page]);
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("file");
   const [episode, setEpisode] = useState("7화");
   const [text, setText] = useState("");
@@ -149,6 +155,28 @@ export default function ManuscriptImport() {
 
   return (
     <div className="fade-up space-y-5">
+      {/* 불러오기 / 새 회차 쓰기 전환 */}
+      <div className="flex gap-1 rounded-2xl border border-paper-300 bg-paper-100 p-1.5">
+        {([
+          ["import", "📥 원고·설정 불러오기"],
+          ["writing", "✒️ 새 회차 쓰기"],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setMode(k)}
+            className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+              mode === k ? "bg-white text-stone-800 shadow-card" : "text-stone-500 hover:text-stone-700"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "writing" && <NewWriting />}
+
+      {mode === "import" && (
+      <div className="space-y-5">
       <div>
         <h2 className="text-2xl font-extrabold text-stone-800">원고·설정 불러오기</h2>
         <p className="text-base text-stone-500">
@@ -415,6 +443,8 @@ export default function ManuscriptImport() {
             </p>
           )}
         </section>
+      )}
+      </div>
       )}
     </div>
   );

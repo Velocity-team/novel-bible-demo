@@ -1,5 +1,11 @@
 import type { AppState } from "../types";
-import { buildEmptyState } from "../data/mockData";
+import {
+  buildEmptyState,
+  mockPlacements,
+  mockProject,
+  mockStages,
+  mockZones,
+} from "../data/mockData";
 
 const STATE_KEY = "loreblock_state_v2";
 // v3: force 레이아웃 도입으로 기존 정렬형 배치 저장본을 버린다
@@ -12,7 +18,19 @@ export function loadState(): AppState {
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<AppState>;
       // 과거 버전 저장본과의 누락 필드 병합
-      return { ...buildEmptyState(), ...parsed } as AppState;
+      const merged = { ...buildEmptyState(), ...parsed } as AppState;
+      // 세계관 지도 데이터가 없는 이전 저장본은 목데이터로 채워 준다(학습 완료 상태일 때만).
+      if (merged.onboarded && (!merged.zones || merged.zones.length === 0)) {
+        merged.zones = structuredClone(mockZones);
+        merged.stages = structuredClone(mockStages);
+        merged.placements = structuredClone(mockPlacements);
+        // 회차에 작품 속 시간이 없으면 목 프로젝트의 날짜로 보강
+        merged.project.episodes = merged.project.episodes.map((ep) => ({
+          ...ep,
+          date: ep.date ?? mockProject.episodes.find((m) => m.id === ep.id)?.date,
+        }));
+      }
+      return merged;
     }
   } catch {
     // 손상된 저장본은 무시하고 초기화

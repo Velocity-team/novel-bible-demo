@@ -19,12 +19,20 @@ export default function AskLoreAI() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [demoHint, setDemoHint] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const autoAsked = useRef(false);
 
-  const ask = (question: string) => {
+  const ask = (question: string, fromExample = false) => {
     const q = question.trim();
     if (!q || thinking) return;
+    // 편의상 제공되는 체험 화면이라 미리 준비된 예시 질문에만 답한다.
+    if (!fromExample && !SUGGESTED.includes(q)) {
+      setDemoHint(true);
+      setInput("");
+      return;
+    }
+    setDemoHint(false);
     addChat({ role: "user", text: q, relatedBlockIds: [], relatedRelationIds: [], relatedConflictIds: [] });
     setInput("");
     setThinking(true);
@@ -69,7 +77,8 @@ export default function AskLoreAI() {
         <div>
           <h2 className="text-2xl font-extrabold text-stone-800">AI에게 물어보기</h2>
           <p className="text-base text-stone-500">
-            내 작품 설정에 대해 물어보면, 저장된 기록에서 관련 인물·사건·규칙을 찾아 답해 줘요.
+            <b className="text-stone-700">「{state.project.title}」</b> 설정에 대해 물어보면, 저장된
+            기록에서 관련 인물·사건·규칙을 찾아 답해 줘요.
           </p>
         </div>
         {state.chatHistory.length > 0 && (
@@ -85,16 +94,16 @@ export default function AskLoreAI() {
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <span className="text-5xl">💬</span>
             <p className="text-base text-stone-500">
-              작가님이 잊어버린 설정도 AI는 기억하고 있어요.
+              지금은 <b className="text-stone-700">「{state.project.title}」</b>를 예시로 답해 드려요.
               <br />
-              아래 질문으로 시작해 보세요.
+              아래 예시 질문을 눌러 시작해 보세요.
             </p>
             <div className="flex max-w-2xl flex-wrap justify-center gap-2">
               {SUGGESTED.map((s) => (
                 <button
                   key={s}
                   className="chip cursor-pointer border border-paper-300 bg-white px-4 py-2 text-base text-stone-600 transition hover:border-amber-400 hover:text-amber-800"
-                  onClick={() => ask(s)}
+                  onClick={() => ask(s, true)}
                 >
                   {s}
                 </button>
@@ -114,7 +123,7 @@ export default function AskLoreAI() {
             <div key={m.id} className="flex justify-start">
               <div className="max-w-[90%] space-y-3 rounded-2xl rounded-bl-md border border-paper-300 bg-paper-100 px-4 py-3">
                 <div className="flex items-center gap-1.5 text-sm font-bold text-amber-700">
-                  📚 로어블록 AI
+                  📚 노벨 바이블 AI
                 </div>
                 <p className="text-base leading-relaxed text-stone-700">{m.text}</p>
 
@@ -226,11 +235,34 @@ export default function AskLoreAI() {
             <button
               key={s}
               className="chip shrink-0 cursor-pointer border border-paper-300 bg-white text-stone-500 hover:text-amber-800"
-              onClick={() => ask(s)}
+              onClick={() => ask(s, true)}
             >
               {s}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* 직접 입력 안내 (체험 화면) */}
+      {demoHint && (
+        <div className="fade-up rounded-2xl border border-amber-300 bg-amber-50 p-4">
+          <div className="text-base font-bold text-amber-900">
+            💡 지금은 편의상 보여 드리는 체험 화면이에요
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-amber-800">
+            직접 입력하신 질문에는 아직 답해 드릴 수 없어요. 아래 <b>예시 질문</b>을 눌러 체험해 보세요.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SUGGESTED.map((s) => (
+              <button
+                key={s}
+                className="chip cursor-pointer border border-amber-300 bg-white px-3 py-1.5 text-sm text-amber-800 transition hover:bg-amber-100"
+                onClick={() => ask(s, true)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

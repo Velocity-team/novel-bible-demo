@@ -63,7 +63,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
       <button
         className="btn-ghost whitespace-nowrap"
         onClick={() => navigate("about")}
-        title="로어블록이 어떤 서비스인지 알아보기"
+        title="노벨 바이블이 어떤 서비스인지 알아보기"
       >
         <span className="hidden lg:inline">💡 서비스 소개</span>
         <span className="lg:hidden">💡</span>

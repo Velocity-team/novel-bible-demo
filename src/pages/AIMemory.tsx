@@ -6,7 +6,7 @@ const SOURCE_TYPE_META: Record<string, { label: string; icon: string; chip: stri
   manuscript: { label: "원고", icon: "📄", chip: "bg-violet-100 text-violet-800" },
   excel: { label: "설정표", icon: "📊", chip: "bg-teal-100 text-teal-800" },
   manual: { label: "직접 입력", icon: "✍️", chip: "bg-stone-200 text-stone-700" },
-  generated: { label: "AI와 만든 초안", icon: "✨", chip: "bg-amber-100 text-amber-800" },
+  generated: { label: "추천 시나리오 메모", icon: "💡", chip: "bg-amber-100 text-amber-800" },
 };
 
 const STATUS_META: Record<string, { label: string; chip: string }> = {
@@ -113,7 +113,7 @@ export default function AIMemory() {
               <option value="manuscript">원고</option>
               <option value="excel">설정표</option>
               <option value="manual">직접 입력</option>
-              <option value="generated">AI와 만든 초안</option>
+              <option value="generated">추천 시나리오 메모</option>
             </select>
           </div>
         </div>

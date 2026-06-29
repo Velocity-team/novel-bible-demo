@@ -4,28 +4,29 @@ import type { PageKey } from "../types";
 /** 작가의 작업 흐름(보관·정리 → 집필 도우미)에 맞춰 묶은 메뉴 */
 const MENU_GROUPS: {
   title: string | null;
-  items: { key: PageKey; label: string; icon: string }[];
+  items: { key: PageKey; label: string; icon: string; badge?: string }[];
 }[] = [
   {
     title: null,
-    items: [{ key: "dashboard", label: "내 작품 한눈에", icon: "🏠" }],
+    items: [
+      { key: "ask", label: "AI에게 물어보기", icon: "💬" },
+      { key: "dashboard", label: "내 작품 한눈에", icon: "🏠" },
+    ],
   },
   {
-    title: "원고·설정 보관",
+    title: "세계관 기록",
     items: [
-      { key: "import", label: "원고·설정 불러오기", icon: "📥" },
+      { key: "atlas", label: "세계관 지도", icon: "🗺️", badge: "NEW" },
       { key: "blocks", label: "설정 사전", icon: "🗂️" },
-      { key: "relations", label: "관계 만들기", icon: "🔗" },
+      { key: "import", label: "원고·설정 불러오기", icon: "📥" },
       { key: "memory", label: "AI 학습 현황", icon: "🧠" },
     ],
   },
   {
     title: "집필 도우미",
     items: [
-      { key: "writing", label: "새 회차 쓰기", icon: "✒️" },
-      { key: "scenario", label: "새 에피소드 만들기", icon: "✨" },
+      { key: "plotroom", label: "캐릭터 회의실", icon: "🎬", badge: "NEW" },
       { key: "conflicts", label: "설정 오류 검사", icon: "🚨" },
-      { key: "ask", label: "AI에게 물어보기", icon: "💬" },
     ],
   },
   {
@@ -37,9 +38,12 @@ const MENU_GROUPS: {
 export default function Sidebar({
   mobileOpen,
   onClose,
+  onExit,
 }: {
   mobileOpen: boolean;
   onClose: () => void;
+  /** 로고를 누르면 랜딩으로 */
+  onExit?: () => void;
 }) {
   const { page, navigate, state } = useApp();
   const openConflicts = state.conflicts.filter((c) => c.status === "open").length;
@@ -54,17 +58,22 @@ export default function Sidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center gap-3 px-5 py-5">
+        <button
+          type="button"
+          onClick={onExit}
+          className="flex items-center gap-3 px-5 py-5 text-left transition hover:opacity-80"
+          title="노벨 바이블 첫 화면으로"
+        >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-2xl shadow-card">
             📚
           </div>
           <div>
             <div className="text-xl font-extrabold tracking-tight text-stone-800">
-              로어블록
+              노벨 바이블
             </div>
             <div className="text-xs text-stone-500">작가를 위한 세계관 기록 도우미</div>
           </div>
-        </div>
+        </button>
 
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
           {MENU_GROUPS.map((g, gi) => (
@@ -92,6 +101,11 @@ export default function Sidebar({
                     >
                       <span className="text-lg">{m.icon}</span>
                       <span className="flex-1 text-left">{m.label}</span>
+                      {m.badge && !active && (
+                        <span className="chip bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                          {m.badge}
+                        </span>
+                      )}
                       {m.key === "conflicts" && openConflicts > 0 && (
                         <span className="chip bg-red-100 text-red-700">{openConflicts}</span>
                       )}
