@@ -1,10 +1,11 @@
 /**
  * 방문자별(고유 키) 행동 지표.
- * 페이지 진입마다 발급되는 고유 키(sid)를 붙여 Supabase Edge Functions에 이벤트를 저장한다.
+ * 같은 브라우저에 저장되는 고유 키(sid)를 붙여 Supabase Edge Functions에 이벤트를 저장한다.
  * 방문자 전체 이메일·관심도 Supabase Edge Functions를 통해 저장한다.
  */
 
 const ADMIN_MODE_KEY = "novelbible_admin_mode";
+const VISITOR_ID_KEY = "novelbible_visitor_id";
 const DEFAULT_SUPABASE_FUNCTIONS_URL = "https://lradvtqbtsxdcoavtasn.supabase.co/functions/v1";
 const SUPABASE_FUNCTIONS_URL = (
   import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || DEFAULT_SUPABASE_FUNCTIONS_URL
@@ -31,7 +32,6 @@ export function setAdminMode(enabled: boolean): void {
   }
 }
 
-/** 페이지 로드(=한 번의 방문)마다 1개 발급되는 고유 키 */
 function genId(): string {
   try {
     if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
@@ -41,7 +41,21 @@ function genId(): string {
   return "v_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-const SESSION_ID = genId();
+/** 같은 브라우저와 같은 사이트 주소에서는 재방문해도 같은 고유 키를 쓴다. */
+function getOrCreateVisitorId(): string {
+  try {
+    const stored = localStorage.getItem(VISITOR_ID_KEY);
+    if (stored) return stored;
+
+    const id = genId();
+    localStorage.setItem(VISITOR_ID_KEY, id);
+    return id;
+  } catch {
+    return genId();
+  }
+}
+
+const SESSION_ID = getOrCreateVisitorId();
 export function getSessionId(): string {
   return SESSION_ID;
 }
