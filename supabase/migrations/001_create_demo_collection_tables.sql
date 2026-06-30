@@ -1,7 +1,7 @@
 -- Demo data collection tables for the LoreBlock landing/demo flow.
 -- Public clients must not access these tables directly. Edge Functions use
 -- the service_role key and enforce request validation/admin checks.
-
+create extension if not exists "pgcrypto";
 create table if not exists public.events (
   id uuid primary key default gen_random_uuid(),
   sid text not null check (char_length(sid) between 1 and 128),
