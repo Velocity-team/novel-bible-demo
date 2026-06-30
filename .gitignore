@@ -10,3 +10,6 @@ dist/
 
 # Local Netlify/Deno dev artifact
 deno.lock
+
+# Local Supabase CLI state
+supabase/.temp/

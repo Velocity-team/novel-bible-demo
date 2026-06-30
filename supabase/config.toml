@@ -1,0 +1,14 @@
+[functions.track-event]
+verify_jwt = false
+
+[functions.submit-lead]
+verify_jwt = false
+
+[functions.admin-events]
+verify_jwt = false
+
+[functions.admin-leads]
+verify_jwt = false
+
+[functions.admin-delete-visitor]
+verify_jwt = false
