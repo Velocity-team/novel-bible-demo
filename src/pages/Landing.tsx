@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppProvider } from "../context/AppContext";
 import { buildInitialState } from "../data/mockData";
-import { isAdminMode, trackEvent } from "../utils/metrics";
+import { isAdminMode, submitLead, trackEvent } from "../utils/metrics";
 import AskLoreAI from "./AskLoreAI";
 import Conflicts from "./Conflicts";
 import PlotRoom from "./PlotRoom";
@@ -16,13 +16,6 @@ const ROLES: { key: string; icon: string; title: string; desc: string }[] = [
   { key: "CP", icon: "🏢", title: "CP·에이전시", desc: "콘텐츠 제공사·매니지먼트·출판사" },
   { key: "그외", icon: "💡", title: "그 외", desc: "독자·업계 관계자 등" },
 ];
-
-/** urlencoded 바디로 인코딩 (Netlify Forms 제출용) */
-function encode(data: Record<string, string>): string {
-  return Object.keys(data)
-    .map((k) => encodeURIComponent(k) + "=" + encodeURIComponent(data[k]))
-    .join("&");
-}
 
 /** 사전 예약 시 선택하는 집필 장르 */
 const GENRES = [
@@ -145,18 +138,17 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
       setStatus("done");
       return;
     }
+    if (botField.trim()) {
+      setStatus("done");
+      return;
+    }
     try {
-      await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({
-          "form-name": "waitlist",
-          email: email.trim(),
-          role: role || localStorage.getItem(ROLE_KEY) || "",
-          genre: resolvedGenre,
-          interests: interests.join(", "),
-          "bot-field": botField,
-        }),
+      await submitLead({
+        email: email.trim(),
+        role: role || localStorage.getItem(ROLE_KEY) || "",
+        genre: resolvedGenre,
+        genreOther: genre === "기타" ? genreOther.trim() : "",
+        interests,
       });
       trackEvent("waitlist_submit");
       interests.forEach((t) => trackEvent("submit_interest", t));
@@ -246,9 +238,6 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
               </div>
             ) : (
               <form
-                name="waitlist"
-                data-netlify="true"
-                netlify-honeypot="bot-field"
                 noValidate
                 onSubmit={submit}
                 className="mx-auto mt-7 max-w-md space-y-3 text-left"
@@ -264,7 +253,6 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
                     />
                   </label>
                 </p>
-                <input type="hidden" name="form-name" value="waitlist" />
                 <input type="hidden" name="role" value={role} />
 
                 {/* 1. 집필 장르 분류 */}

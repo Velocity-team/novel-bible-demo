@@ -13,3 +13,6 @@ deno.lock
 
 # Local Supabase CLI state
 supabase/.temp/
+
+# Local Codex helper logs
+.codex-*.log

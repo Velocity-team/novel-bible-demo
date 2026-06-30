@@ -1,10 +1,18 @@
 /**
  * 방문자별(고유 키) 행동 지표.
- * 페이지 진입마다 발급되는 고유 키(sid)를 붙여 중앙(Netlify Blobs)에 이벤트를 저장한다.
- * 방문자 전체 이메일·관심은 Netlify Forms(waitlist 제출)에서 본다.
+ * 페이지 진입마다 발급되는 고유 키(sid)를 붙여 Supabase Edge Functions에 이벤트를 저장한다.
+ * 방문자 전체 이메일·관심도 Supabase Edge Functions를 통해 저장한다.
  */
 
 const ADMIN_MODE_KEY = "novelbible_admin_mode";
+const DEFAULT_SUPABASE_FUNCTIONS_URL = "https://lradvtqbtsxdcoavtasn.supabase.co/functions/v1";
+const SUPABASE_FUNCTIONS_URL = (
+  import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || DEFAULT_SUPABASE_FUNCTIONS_URL
+).replace(/\/$/, "");
+
+function functionUrl(path: string): string {
+  return `${SUPABASE_FUNCTIONS_URL}/${path}`;
+}
 
 export function isAdminMode(): boolean {
   try {
@@ -56,12 +64,32 @@ export interface MetricEvent {
   sid: string;
 }
 
+export interface LeadEvent {
+  id: string;
+  sid: string;
+  email: string;
+  role?: string | null;
+  genre?: string | null;
+  genreOther?: string | null;
+  interests: string[];
+  ts: number;
+  createdAt?: string;
+}
+
+export interface LeadSubmission {
+  email: string;
+  role?: string;
+  genre?: string;
+  genreOther?: string;
+  interests?: string[];
+}
+
 export function trackEvent(type: MetricType, feature?: string): void {
   if (isAdminMode()) return;
 
   const ts = Date.now();
   try {
-    fetch("/.netlify/functions/track", {
+    fetch(functionUrl("track-event"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sid: SESSION_ID, type, feature, ts }),
@@ -74,18 +102,45 @@ export function trackEvent(type: MetricType, feature?: string): void {
 
 /** 백오피스용: 모든 방문자의 이벤트를 중앙에서 가져온다. */
 export async function fetchCentralEvents(adminPassword: string): Promise<MetricEvent[]> {
-  const res = await fetch("/.netlify/functions/metrics", {
+  const res = await fetch(functionUrl("admin-events"), {
     cache: "no-store",
     headers: { "x-admin-password": adminPassword },
   });
-  if (!res.ok) throw new Error(`metrics ${res.status}`);
+  if (!res.ok) throw new Error(`admin-events ${res.status}`);
   const data = (await res.json()) as { events?: MetricEvent[] };
   return Array.isArray(data.events) ? data.events : [];
 }
 
+export async function submitLead(payload: LeadSubmission): Promise<void> {
+  const res = await fetch(functionUrl("submit-lead"), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      sid: SESSION_ID,
+      email: payload.email,
+      role: payload.role,
+      genre: payload.genre,
+      genreOther: payload.genreOther,
+      interests: payload.interests ?? [],
+      ts: Date.now(),
+    }),
+  });
+  if (!res.ok) throw new Error(`submit-lead ${res.status}`);
+}
+
+export async function fetchCentralLeads(adminPassword: string): Promise<LeadEvent[]> {
+  const res = await fetch(functionUrl("admin-leads"), {
+    cache: "no-store",
+    headers: { "x-admin-password": adminPassword },
+  });
+  if (!res.ok) throw new Error(`admin-leads ${res.status}`);
+  const data = (await res.json()) as { leads?: LeadEvent[] };
+  return Array.isArray(data.leads) ? data.leads : [];
+}
+
 /** 백오피스용: 특정 방문 키의 중앙 이벤트를 삭제한다. */
 export async function deleteCentralVisitor(adminPassword: string, sid: string): Promise<number> {
-  const res = await fetch("/.netlify/functions/delete-metrics", {
+  const res = await fetch(functionUrl("admin-delete-visitor"), {
     method: "POST",
     cache: "no-store",
     headers: {
@@ -94,7 +149,7 @@ export async function deleteCentralVisitor(adminPassword: string, sid: string): 
     },
     body: JSON.stringify({ sid }),
   });
-  if (!res.ok) throw new Error(`delete-metrics ${res.status}`);
+  if (!res.ok) throw new Error(`admin-delete-visitor ${res.status}`);
   const data = (await res.json()) as { deleted?: number };
   return typeof data.deleted === "number" ? data.deleted : 0;
 }

@@ -2,9 +2,11 @@ import { useCallback, useMemo, useState, type FormEvent } from "react";
 import {
   deleteCentralVisitor,
   fetchCentralEvents,
+  fetchCentralLeads,
   groupByVisitor,
   isAdminMode,
   setAdminMode,
+  type LeadEvent,
   type MetricEvent,
   type VisitorSummary,
 } from "../utils/metrics";
@@ -77,6 +79,7 @@ export default function BackOffice() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [events, setEvents] = useState<MetricEvent[]>([]);
+  const [leads, setLeads] = useState<LeadEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [adminMode, setAdminModeState] = useState(() => isAdminMode());
@@ -88,11 +91,16 @@ export default function BackOffice() {
     setLoading(true);
     setErr(null);
     try {
-      const ev = await fetchCentralEvents(adminPassword);
+      const [ev, leadRows] = await Promise.all([
+        fetchCentralEvents(adminPassword),
+        fetchCentralLeads(adminPassword),
+      ]);
       setEvents(ev);
+      setLeads(leadRows);
     } catch {
       setErr("중앙 데이터를 불러오지 못했어요. 비밀번호를 다시 확인해 주세요.");
       setEvents([]);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -102,8 +110,12 @@ export default function BackOffice() {
     e.preventDefault();
     setAuthError(null);
     try {
-      const ev = await fetchCentralEvents(password);
+      const [ev, leadRows] = await Promise.all([
+        fetchCentralEvents(password),
+        fetchCentralLeads(password),
+      ]);
       setEvents(ev);
+      setLeads(leadRows);
       setAdminMode(true);
       setAdminModeState(true);
       setUnlocked(true);
@@ -117,11 +129,11 @@ export default function BackOffice() {
   const kpi = useMemo(() => {
     return {
       total: visitors.length,
-      submitted: visitors.filter((v) => v.submitted).length,
+      submitted: leads.length,
       entered: visitors.filter((v) => v.enteredDemo).length,
       openedDemo: visitors.filter((v) => v.demoFeatures.length > 0).length,
     };
-  }, [visitors]);
+  }, [leads.length, visitors]);
 
   // 역할(작가/지망생/CP/그외/무응답)별 방문 수
   const roleBreakdown = useMemo(() => {
@@ -316,6 +328,56 @@ export default function BackOffice() {
                 </span>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* 이메일 리드 */}
+        <div className="rounded-2xl border border-stone-800 bg-stone-900 p-5">
+          <h2 className="mb-3 text-lg font-bold">이메일 리드 ({leads.length})</h2>
+          {leads.length === 0 ? (
+            <p className="text-sm text-stone-500">아직 수집된 이메일이 없습니다.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="text-xs uppercase text-stone-500">
+                  <tr className="border-b border-stone-800">
+                    <th className="py-2 pr-3">이메일</th>
+                    <th className="py-2 pr-3">방문 키</th>
+                    <th className="py-2 pr-3">역할</th>
+                    <th className="py-2 pr-3">장르</th>
+                    <th className="py-2 pr-3">관심 기능</th>
+                    <th className="py-2">제출 시각</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.slice(0, 8).map((lead) => (
+                    <tr key={lead.id} className="border-b border-stone-800/70 align-top">
+                      <td className="py-2.5 pr-3 font-semibold text-emerald-300">{lead.email}</td>
+                      <td className="py-2.5 pr-3 font-mono text-amber-300">{shortKey(lead.sid)}</td>
+                      <td className="py-2.5 pr-3 text-stone-300">{lead.role || "—"}</td>
+                      <td className="py-2.5 pr-3 text-stone-300">{lead.genre || lead.genreOther || "—"}</td>
+                      <td className="py-2.5 pr-3">
+                        {lead.interests.length === 0 ? (
+                          <span className="text-stone-600">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {lead.interests.map((interest) => (
+                              <Chip key={interest} tone="emerald">
+                                {interest}
+                              </Chip>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-2.5 text-stone-400">{fmt(lead.ts)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {leads.length > 8 && (
+            <p className="mt-3 text-xs text-stone-500">최근 8개 이메일만 표시합니다.</p>
           )}
         </div>
 
