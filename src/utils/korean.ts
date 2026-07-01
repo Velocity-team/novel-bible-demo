@@ -1,4 +1,4 @@
-/** 한글 받침 여부에 따라 조사를 선택한다. josa("흥부", "은", "는") → "는" */
+/** 한글 받침 여부에 따라 조사를 선택한다. josa("도현", "은", "는") → "은" */
 export function josa(word: string, withBatchim: string, without: string): string {
   const ch = word.charCodeAt(word.length - 1);
   if (ch >= 0xac00 && ch <= 0xd7a3) {

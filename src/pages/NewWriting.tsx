@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { Icon } from "../components/Icon";
 import { simulateCanonGuard, simulateManuscriptAnalysis } from "../utils/aiSim";
 
 export default function NewWriting() {
@@ -65,19 +66,19 @@ export default function NewWriting() {
 
   const detectSection = (title: string, icon: string, items: string[]) => (
     <div>
-      <div className="label">
-        {icon} {title}
+      <div className="label flex items-center gap-1.5">
+        <Icon name={icon} size={14} className="shrink-0" /> {title}
       </div>
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {items.map((n) => (
-            <span key={n} className="chip border border-paper-300 bg-paper-100 text-stone-600">
+            <span key={n} className="chip bg-paper-2">
               {n}
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-stone-400">아직 없음</p>
+        <p className="text-sm text-ink-faint">아직 없음</p>
       )}
     </div>
   );
@@ -86,8 +87,8 @@ export default function NewWriting() {
     <div className="fade-up space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-stone-800">새 회차 쓰기</h2>
-          <p className="text-base text-stone-500">
+          <h2 className="text-2xl font-extrabold text-ink">새 회차 쓰기</h2>
+          <p className="text-base text-ink-soft">
             글을 쓰는 동안 ‘설정 지킴이’가 저장된 설정과 어긋나는 부분을 바로 알려 줍니다.
           </p>
         </div>
@@ -127,7 +128,7 @@ export default function NewWriting() {
               <label className="label">회차 제목</label>
               <input
                 className="input"
-                placeholder="예: 7화 놀부의 박"
+                placeholder="예: 89화 해운대"
                 value={episodeTitle}
                 onChange={(e) => setEpisodeTitle(e.target.value)}
               />
@@ -136,7 +137,7 @@ export default function NewWriting() {
               <label className="label">장면 제목</label>
               <input
                 className="input"
-                placeholder="예: 제비 둥지 앞"
+                placeholder="예: 부산 해운대 게이트"
                 value={sceneTitle}
                 onChange={(e) => setSceneTitle(e.target.value)}
               />
@@ -144,9 +145,9 @@ export default function NewWriting() {
           </div>
           <div className="relative flex-1">
             <textarea
-              className="input min-h-[380px] w-full resize-none text-lg leading-8"
+              className="input min-h-[380px] w-full resize-none font-serif text-lg leading-8"
               placeholder={
-                "여기에 새 장면을 써 보세요…\n\n이렇게 써 보면 경고를 볼 수 있어요:\n· “왼쪽 다리를 다쳤던 제비” → 다리 방향 경고\n· “한여름에 박을 탔다” → 박 타기 규칙 경고\n· “아홉 남매” → 자식 수 경고"
+                "여기에 새 장면을 써 보세요…\n\n이렇게 써 보면 경고를 볼 수 있어요:\n· “하은채가 부산에서 살아 돌아왔다” → 죽은 인물 재등장 경고\n· “이서준은 C급이 되었다” → 각성 등급 불변 경고\n· “누나 이수아” → 가족 관계 경고"
               }
               value={content}
               onChange={(e) => {
@@ -157,10 +158,10 @@ export default function NewWriting() {
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button className="btn-primary" onClick={handleSave}>
-              {savedFlash ? "✓ 저장됐어요!" : "💾 글 저장"}
+              {savedFlash ? "✓ 저장됐어요!" : "글 저장"}
             </button>
-            <button className="btn-green" onClick={handleAnalyze} disabled={analyzing || !content.trim()}>
-              {analyzing ? "검사하는 중…" : "🔍 설정 오류 검사"}
+            <button className="btn-primary" onClick={handleAnalyze} disabled={analyzing || !content.trim()}>
+              {analyzing ? "검사하는 중…" : "설정 오류 검사"}
             </button>
             {draftId && (
               <button
@@ -176,8 +177,8 @@ export default function NewWriting() {
                 이 글 삭제
               </button>
             )}
-            <span className="ml-auto text-sm text-stone-500">
-              {content.length.toLocaleString()}자 · 실시간 검사 켜짐
+            <span className="ml-auto text-sm text-ink-soft">
+              <span className="font-mono tabular-nums">{content.length.toLocaleString()}</span>자 · 실시간 검사 켜짐
             </span>
           </div>
         </section>
@@ -185,10 +186,10 @@ export default function NewWriting() {
         {/* 설정 지킴이 패널 */}
         <aside className="card max-h-[680px] space-y-4 overflow-y-auto p-5">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🛡️</span>
+            <Icon name="shield" size={22} className="shrink-0 text-ink-soft" />
             <div>
-              <div className="text-lg font-bold text-stone-800">설정 지킴이</div>
-              <div className="text-sm text-stone-500">
+              <div className="text-lg font-bold text-ink">설정 지킴이</div>
+              <div className="text-sm text-ink-soft">
                 작가가 잊어버린 설정을 AI가 대신 기억해서 알려 줘요.
               </div>
             </div>
@@ -199,40 +200,42 @@ export default function NewWriting() {
               {guard.warnings.map((w, i) => (
                 <div
                   key={i}
-                  className={`fade-up rounded-xl border p-3 ${
+                  className={`fade-up rounded-sm border p-3 ${
                     w.severity === "high"
-                      ? "border-red-300 bg-red-50"
-                      : "border-amber-300 bg-amber-50"
+                      ? "border-signal bg-signal-bg"
+                      : "border-line bg-paper-2"
                   }`}
                 >
                   <div
-                    className={`mb-1 text-base font-bold ${
-                      w.severity === "high" ? "text-red-700" : "text-amber-800"
+                    className={`mb-1 flex items-center gap-1.5 text-base font-bold ${
+                      w.severity === "high" ? "text-signal" : "text-ink-mid"
                     }`}
                   >
-                    ⚠️ {w.title}
+                    <Icon name="warning" size={16} className="shrink-0" /> {w.title}
                   </div>
-                  <p className="text-sm leading-relaxed text-stone-700">{w.message}</p>
+                  <p className="text-sm leading-relaxed text-ink-mid">{w.message}</p>
                 </div>
               ))}
             </div>
           )}
 
-          {detectSection("이 글에 나온 인물", "👤", guard.characters)}
-          {detectSection("이 글에 나온 장소", "🏡", guard.locations)}
-          {detectSection("이어지는 사건", "⚡", guard.events)}
-          {detectSection("관련된 규칙", "📜", guard.rules)}
+          {detectSection("이 글에 나온 인물", "character", guard.characters)}
+          {detectSection("이 글에 나온 장소", "location", guard.locations)}
+          {detectSection("이어지는 사건", "event", guard.events)}
+          {detectSection("관련된 규칙", "rule", guard.rules)}
 
           <div>
-            <div className="label">✅ 확인해 두면 좋은 것</div>
+            <div className="label flex items-center gap-1.5">
+              <Icon name="check" size={14} className="shrink-0" /> 확인해 두면 좋은 것
+            </div>
             <ul className="space-y-1">
               {guard.checkpoints.map((c, i) => (
-                <li key={i} className="rounded-lg bg-paper-100 px-3 py-2 text-sm text-stone-600">
+                <li key={i} className="rounded-sm bg-paper-2 px-3 py-2 text-sm text-ink-mid">
                   {c}
                 </li>
               ))}
               {guard.checkpoints.length === 0 && (
-                <li className="text-sm text-stone-400">
+                <li className="text-sm text-ink-faint">
                   글을 쓰기 시작하면 확인할 내용이 표시됩니다.
                 </li>
               )}
@@ -248,12 +251,12 @@ export default function NewWriting() {
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="pulse-dot h-2.5 w-2.5 rounded-full bg-emerald-500"
+                className="pulse-dot h-2.5 w-2.5 rounded-full bg-ink-soft"
                 style={{ animationDelay: `${i * 0.2}s` }}
               />
             ))}
           </div>
-          <span className="text-lg text-emerald-800">쓴 글을 저장된 설정과 비교하는 중…</span>
+          <span className="text-lg text-ink-soft">쓴 글을 저장된 설정과 비교하는 중…</span>
         </section>
       )}
 
@@ -263,10 +266,10 @@ export default function NewWriting() {
             <div className="label">나온 인물 / 장소</div>
             <div className="flex flex-wrap gap-1">
               {[...guard.characters, ...guard.locations].map((n) => (
-                <span key={n} className="chip bg-violet-100 text-violet-800">{n}</span>
+                <span key={n} className="chip border border-line bg-paper-2 text-ink-mid">{n}</span>
               ))}
               {guard.characters.length + guard.locations.length === 0 && (
-                <span className="text-sm text-stone-400">없음</span>
+                <span className="text-sm text-ink-faint">없음</span>
               )}
             </div>
           </div>
@@ -274,28 +277,32 @@ export default function NewWriting() {
             <div className="label">나온 사건 / 규칙</div>
             <div className="flex flex-wrap gap-1">
               {[...guard.events, ...guard.rules].map((n) => (
-                <span key={n} className="chip bg-amber-100 text-amber-800">{n}</span>
+                <span key={n} className="chip border border-line bg-paper-2 text-ink-mid">{n}</span>
               ))}
               {guard.events.length + guard.rules.length === 0 && (
-                <span className="text-sm text-stone-400">없음</span>
+                <span className="text-sm text-ink-faint">없음</span>
               )}
             </div>
           </div>
-          <div className={`card p-5 ${guard.warnings.length ? "border-red-300" : ""}`}>
+          <div className={`card p-5 ${guard.warnings.length ? "border-signal" : ""}`}>
             <div className="label">어긋날 수 있는 부분</div>
             {guard.warnings.length > 0 ? (
-              <ul className="space-y-1 text-sm text-red-700">
+              <ul className="space-y-1 text-sm text-signal">
                 {guard.warnings.map((w, i) => (
-                  <li key={i}>⚠️ {w.title}</li>
+                  <li key={i} className="flex items-center gap-1.5">
+                    <Icon name="warning" size={14} className="shrink-0" /> {w.title}
+                  </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-base text-emerald-700">어긋나는 부분이 없어요. ✨</p>
+              <p className="text-base text-ink-mid">어긋나는 부분이 없어요.</p>
             )}
           </div>
           <div className="card p-5 md:col-span-3">
-            <div className="label">💡 이렇게 해 보세요</div>
-            <ul className="list-inside list-disc space-y-1 text-base text-stone-600">
+            <div className="label flex items-center gap-1.5">
+              <Icon name="idea" size={14} className="shrink-0" /> 이렇게 해 보세요
+            </div>
+            <ul className="list-inside list-disc space-y-1 text-base text-ink-mid">
               <li>장면 첫 문장에 계절과 장소를 적어 두면 규칙 검사가 쉬워집니다.</li>
               <li>새 인물이 나오면 설정 사전에 먼저 카드로 저장해 두세요.</li>
               {guard.warnings.length > 0 && (

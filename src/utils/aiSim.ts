@@ -18,16 +18,18 @@ export interface AnalysisResult {
 }
 
 const KNOWN_KEYWORDS = [
-  "흥부",
-  "놀부",
-  "제비",
-  "박씨",
-  "밥주걱",
-  "강남",
-  "초가집",
-  "기와집",
-  "박 타기",
-  "도깨비",
+  "강도현",
+  "이서준",
+  "윤가람",
+  "하은채",
+  "채린",
+  "에르그",
+  "게이트",
+  "각성",
+  "회귀",
+  "빙의",
+  "각성석",
+  "균열교",
 ];
 
 /** 입력 텍스트에서 키워드가 포함된 첫 문장을 근거처럼 잘라낸다. */
@@ -49,39 +51,39 @@ export function simulateManuscriptAnalysis(text: string): AnalysisResult {
   const candidates: AnalysisCandidate[] = [
     {
       kind: "character",
-      label: "도깨비",
-      detail: "놀부의 박에서 나오는 것으로 보이는 새 인물",
-      evidence: evidenceFromText(text, "도깨비"),
+      label: "진서율",
+      detail: "지하 경매장의 정보상으로 보이는 새 인물",
+      evidence: evidenceFromText(text, "정보상"),
     },
     {
       kind: "location",
-      label: "놀부네 박밭",
-      detail: "놀부가 박씨를 심으려고 만든 새 장소",
-      evidence: evidenceFromText(text, "박밭"),
+      label: "재의 갱도",
+      detail: "각성석을 캐는 광산. 새 장소 후보",
+      evidence: evidenceFromText(text, "갱도"),
     },
     {
       kind: "event",
-      label: "놀부의 박 타기",
-      detail: "놀부가 욕심으로 받은 박을 타는 새 사건",
-      evidence: evidenceFromText(text, "박"),
+      label: "재의 갱도 쟁탈전",
+      detail: "각성석 광산을 두고 벌어지는 새 사건",
+      evidence: evidenceFromText(text, "각성석"),
     },
     {
       kind: "rule",
-      label: "일부러 다치게 한 제비의 박씨에서는 재앙이 나온다",
-      detail: "새 세계관 규칙 후보 (욕심의 대가를 구체화)",
-      evidence: evidenceFromText(text, "재앙"),
+      label: "게이트 코어를 부수면 게이트가 닫힌다",
+      detail: "새 세계관 규칙 후보 (코어 회수)",
+      evidence: evidenceFromText(text, "코어"),
     },
     {
       kind: "relation",
-      label: "도깨비 / 응징 / 놀부",
+      label: "진서율 / 조력자 / 이서준〈강도현〉",
       detail: "새 관계 후보",
-      evidence: evidenceFromText(text, "놀부"),
+      evidence: evidenceFromText(text, "정보"),
     },
     {
       kind: "conflict",
-      label: "은혜 갚기 규칙과 어긋날 가능성",
+      label: "각성 등급 불변 규칙과 어긋날 가능성",
       detail:
-        "‘은혜 갚기 규칙’에 따르면 제비는 진심 어린 선행에만 보답합니다. 놀부에게 박씨를 주는 장면은 이 규칙과 어긋나지 않는지 확인하세요.",
+        "‘각성 등급 불변’ 규칙에 따르면 재각성 없이 등급이 바뀌면 안 됩니다. 주인공의 등급 표기가 회차마다 일관된지 확인하세요.",
       evidence: evidenceFromText(text),
     },
   ];
@@ -113,51 +115,50 @@ export function simulateCanonGuard(text: string, state: AppState): GuardResult {
 
   const warnings: GuardWarning[] = [];
 
-  if (text.includes("제비") && text.includes("왼쪽 다리")) {
+  if (text.includes("하은채") && (text.includes("살아") || text.includes("생존") || text.includes("부산"))) {
     warnings.push({
       severity: "high",
-      title: "제비 다리 방향이 다릅니다",
+      title: "죽은 인물이 다시 등장합니다",
       message:
-        "저장된 설정에서 제비가 다친 다리는 오른쪽입니다. ‘왼쪽 다리’를 ‘오른쪽 다리’로 고치거나 설정 카드를 수정하세요.",
+        "하은채는 47화 상암 게이트에서 전사한 것으로 저장돼 있습니다. 88화 회귀 분기로 살린 것이 의도라면 배치 변경을 먼저 보여 주고, 아니라면 등장을 수정하세요.",
     });
   }
-  if ((text.includes("여름") || text.includes("뙤약볕")) && text.includes("박을 탔")) {
+  if (text.includes("C급") && (text.includes("이서준") || text.includes("도현"))) {
     warnings.push({
       severity: "high",
-      title: "박 타기 규칙에 어긋납니다",
+      title: "각성 등급이 설정과 다릅니다",
       message:
-        "박은 가을에 다 익은 뒤에만 탈 수 있습니다. 계절을 가을로 바꾸거나, 덜 익은 박에서 아무것도 나오지 않는 장면으로 고치세요.",
+        "주인공의 표면 등급은 ‘E급(위장)’입니다. 재각성 사건 없이 C급으로 오르면 ‘각성 등급 불변’ 규칙에 어긋납니다.",
     });
   }
-  if (text.includes("아홉 남매") || (text.includes("자식") && text.includes("아홉"))) {
+  if (text.includes("누나") && text.includes("이수아")) {
     warnings.push({
       severity: "medium",
-      title: "자식 수가 설정과 다릅니다",
-      message:
-        "저장된 설정에서 흥부네 자식은 열두 명입니다. 숫자를 열두 명으로 고치거나 ‘아이들’처럼 숫자 없이 표현하세요.",
+      title: "가족 관계가 설정과 다릅니다",
+      message: "이수아는 이서준의 여동생입니다. ‘누나’를 ‘여동생’으로 고치세요.",
     });
   }
-  if (text.includes("놀부") && (text.includes("착한") || text.includes("선뜻 나눠"))) {
+  if (text.includes("윤가람") && (text.includes("처음") || text.includes("초면"))) {
     warnings.push({
       severity: "medium",
-      title: "놀부 성격이 설정과 다릅니다",
+      title: "윤가람과의 관계에 주의하세요",
       message:
-        "놀부의 성격은 ‘욕심 많음’으로 저장되어 있습니다. 개과천선 장면이라면 그 계기를 먼저 보여 주세요.",
+        "윤가람은 전생(회차)엔 도현의 동료였습니다. 현생 초면으로 그리되, 설명 못 할 기시감은 남겨 두는 것이 설정과 맞습니다.",
     });
   }
-  if (text.includes("흥부") && text.includes("복수")) {
+  if ((text.includes("정체") || text.includes("강도현")) && (text.includes("밝힌") || text.includes("폭로") || text.includes("털어놓"))) {
     warnings.push({
       severity: "high",
       title: "금지 설정에 걸립니다",
       message:
-        "‘흥부가 놀부에게 직접 복수하는 전개 금지’가 작품 설정에 등록되어 있습니다. 전개를 다시 확인하세요.",
+        "‘도현의 정체(강도현·회귀·빙의)를 아군에게 함부로 밝히지 않는다’가 작품 설정에 등록되어 있습니다. 전개를 다시 확인하세요.",
     });
   }
 
   const checkpoints: string[] = [];
-  if (text.includes("박")) checkpoints.push("박이 나오는 장면은 계절(가을 여부)을 함께 적어 주세요.");
-  if (text.includes("제비")) checkpoints.push("제비가 다친 다리는 ‘오른쪽’이 기준입니다.");
-  if (text.includes("놀부")) checkpoints.push("놀부의 벌은 마지막 회차 전까지 미루기로 되어 있습니다.");
+  if (text.includes("게이트")) checkpoints.push("게이트가 나오는 장면은 등급과 제한시간(브레이크 여부)을 함께 적어 주세요.");
+  if (text.includes("하은채")) checkpoints.push("하은채의 생사는 회차별로 다릅니다 — 47화 전사, 88화 분기 이후 생존.");
+  if (text.includes("등급") || text.includes("각성")) checkpoints.push("주인공의 표면 등급은 ‘E급(위장)’이 기준입니다.");
   if (checkpoints.length === 0 && text.trim())
     checkpoints.push("새 회차를 쓰기 전, 설정 오류 검사에서 미해결 항목을 먼저 확인하세요.");
 
@@ -187,67 +188,67 @@ export interface LoreAnswer {
 export function simulateLoreAnswer(question: string, state: AppState): LoreAnswer {
   const q = question;
 
-  if (q.includes("흥부") && q.includes("놀부")) {
+  if (q.includes("강도현") || q.includes("이서준") || q.includes("주인공")) {
     return {
-      text: "흥부와 놀부는 형제입니다. 형 놀부는 부모님의 유산을 독차지하고 흥부네를 내쫓았기 때문에 두 사람은 사이가 나쁩니다. 흥부네 가족은 초가집에서, 놀부네 가족은 기와집에서 삽니다.",
-      blockIds: ["c1", "c2", "o1", "o2"],
-      relationIds: ["rel1", "rel17", "rel6", "rel7"],
-      conflictIds: [],
+      text: "주인공은 몸은 이서준, 의식은 전생 S급 헌터 강도현입니다(빙의+회귀, 3회차). 종말급 게이트 흑일에서 죽은 뒤 10년 전 이서준의 몸에서 눈을 떴고, 전생 지식으로 재앙을 앞질러 막으려 합니다. 표면 등급은 E급으로 위장하고 있습니다.",
+      blockIds: ["c1", "r3", "r4"],
+      relationIds: ["rel1", "rel39"],
+      conflictIds: ["cf1"],
     };
   }
-  if (q.includes("제비") && (q.includes("다리") || q.includes("다쳤"))) {
+  if (q.includes("하은채")) {
     return {
-      text: "제비는 3화에서 구렁이에게서 떨어져 오른쪽 다리가 부러졌고, 흥부가 치료해 주었습니다. 다만 5화에 ‘왼쪽 다리’라는 표현이 있어 지금 설정 오류로 표시되어 있습니다. 오른쪽으로 통일하는 것을 추천합니다.",
-      blockIds: ["c5", "e3"],
-      relationIds: ["rel8"],
+      text: "하은채는 상암 공략대의 신입(D급)입니다. 47화 상암 게이트에서 전사하지만, 88화 도현의 선택으로 세계선이 바뀌며 89화 부산에서 살아 등장합니다. 지금 ‘죽은 인물이 살아서 등장’ 설정 오류로 표시돼 있으니, 89화 앞에 배치 변경을 연결해 주세요.",
+      blockIds: ["c6", "l1", "l2"],
+      relationIds: ["ev2", "ev3"],
       conflictIds: ["cf2"],
     };
   }
-  if (q.includes("박") && (q.includes("언제") || q.includes("조건") || q.includes("규칙"))) {
+  if (q.includes("등급") || q.includes("E급") || q.includes("C급") || q.includes("각성")) {
     return {
-      text: "박은 가을에 다 익은 뒤에만 탈 수 있습니다. 덜 익은 박에서는 아무것도 나오지 않습니다. 다만 4화에 한여름에 박을 타는 장면이 있어 규칙 위반으로 감지된 상태입니다.",
-      blockIds: ["r2", "i1", "e5"],
-      relationIds: ["rel15"],
-      conflictIds: ["cf3"],
+      text: "각성 등급은 한 번 정해지면 바뀌지 않습니다(각성 등급 불변). 주인공의 표면 등급은 E급(위장)인데, 12화 E급과 58화 C급 표기가 어긋나 지금 설정 오류로 감지돼 있습니다. 위장이 들통난 설정이라면 재측정 사건을 명시하세요.",
+      blockIds: ["c1", "r2"],
+      relationIds: ["rel39"],
+      conflictIds: ["cf1"],
     };
   }
-  if (q.includes("박씨")) {
+  if (q.includes("윤가람")) {
     return {
-      text: "박씨는 제비가 은혜를 갚으려고 흥부에게 물어다 준 씨앗입니다(4화). 심으면 신비한 박이 열리고, 가을에 다 익은 박을 타자 금은보화가 나왔습니다(5화). 은혜 갚기 규칙에 따라 진심 어린 선행에만 보답이 따릅니다.",
-      blockIds: ["i1", "e4", "e5", "r1"],
-      relationIds: ["rel12", "rel18", "rel19"],
+      text: "윤가람은 청랑 길드 마스터(S급)이자 현생의 라이벌입니다. 전생(1·2회차)엔 도현의 동료였으나 이번 생엔 아직 남남이며, 설명 못 할 기시감만 느낍니다. 66화 대립을 거쳐 97화에 전생 기억을 되찾고 공조합니다.",
+      blockIds: ["c2", "o3"],
+      relationIds: ["rel21", "rel25"],
       conflictIds: [],
     };
   }
-  if (q.includes("자식") || q.includes("아이")) {
+  if (q.includes("회귀") || q.includes("빙의") || q.includes("에르그") || q.includes("회차")) {
     return {
-      text: "흥부네 자식은 열두 명이 기준 설정입니다. 다만 4화에 ‘아홉 남매’라는 표현이 있어 숫자 충돌이 감지되어 있습니다. 숫자가 중요하지 않은 장면에서는 ‘아이들’로 표현하는 것을 추천합니다.",
-      blockIds: ["c1", "o1"],
-      relationIds: ["rel2"],
-      conflictIds: ["cf1"],
+      text: "강도현은 죽으면 10년 전 이서준의 몸으로 회귀하며 기억을 유지합니다(회귀 법칙). 착지점이 타인의 몸이라 ‘빙의’이며, 회차가 반복될수록 세계선이 미세하게 달라집니다(회차 간섭). 회귀를 부여하는 존재가 시스템 인격 ‘에르그’입니다.",
+      blockIds: ["r3", "r6", "c5"],
+      relationIds: ["rel1", "rel40"],
+      conflictIds: ["cf9"],
     };
   }
   if (q.includes("떡밥") || q.includes("복선")) {
     return {
-      text: "아직 회수되지 않은 떡밥은 두 가지입니다. ① 놀부의 박 — 놀부가 일부러 제비 다리를 부러뜨려 받게 될 박에서 무엇이 나올지 아직 보여주지 않았습니다. ② 욕심의 대가 규칙 — ‘꾸민 선행에는 재앙이 따른다’는 규칙이 아직 실제 사건으로 등장하지 않았습니다. 다음 회차에서 두 떡밥을 함께 회수하는 것을 추천합니다.",
-      blockIds: ["c2", "r3", "e4"],
-      relationIds: ["rel16"],
+      text: "아직 회수되지 않은 떡밥은 세 가지입니다. ① 에르그가 왜 회차를 반복시키는가, ② 윤가람이 느끼는 기시감(전생 동료)의 정체, ③ 균열교 교주 ‘흑관’의 정체와 그가 회귀를 아는지 여부. 후반부(97~100화)에서 함께 회수하는 것을 추천합니다.",
+      blockIds: ["c5", "c2", "c12"],
+      relationIds: ["rel26"],
       conflictIds: [],
     };
   }
   if (q.includes("오류") || q.includes("충돌")) {
     return {
-      text: "지금 가장 위험한 설정 오류는 두 가지입니다. ① 흥부네 자식 수(열두 명 ↔ 아홉 명), ② 제비가 다친 다리 방향(오른쪽 ↔ 왼쪽). 그 외에 한여름 박 타기(규칙 위반)와 2화의 기와집 표현(사건 순서 오류)도 확인이 필요합니다.",
-      blockIds: ["c1", "c5", "r2"],
+      text: "지금 가장 위험한 설정 오류는 두 가지입니다. ① 주인공 각성 등급(12화 E급 ↔ 58화 C급), ② 죽은 하은채가 89화에 살아서 등장. 그 외에 창설 전 백호 길드 언급(18화)과 소꿉친구 채린을 초면처럼 소개한 장면(34화)도 확인이 필요합니다. 반대로 ‘주인공이 미래를 앎’은 회귀 설정이라 의도된 것으로 표시돼 있습니다.",
+      blockIds: ["c1", "c6", "o2"],
       relationIds: [],
       conflictIds: ["cf1", "cf2", "cf3", "cf4"],
     };
   }
-  if (q.includes("7화") || q.includes("다음") || q.includes("새 에피소드")) {
+  if (q.includes("다음") || q.includes("새 에피소드") || q.includes("이어")) {
     return {
-      text: "지금 저장된 설정 기준으로는 ‘놀부의 박 타기’ 에피소드가 적합합니다. 샘이 난 놀부가 일부러 제비 다리를 부러뜨려 박씨를 받고, 욕심의 대가 규칙에 따라 박에서 재앙이 나오는 이야기입니다. 미회수 떡밥 두 개를 한 번에 회수할 수 있습니다.",
-      blockIds: ["c2", "r3", "e4", "e5"],
-      relationIds: ["rel16", "rel19"],
+      text: "지금 저장된 설정 기준으로는 ‘회귀 분기의 대가’ 방향이 적합합니다. 88화에서 하은채를 살린 선택이 부른 예측 불가한 미래(부산 이후)를 다루면, 회차 간섭 규칙과 에르그 복선을 함께 살릴 수 있습니다.",
+      blockIds: ["e12", "e13", "r6"],
+      relationIds: ["rel46"],
       conflictIds: [],
     };
   }
@@ -276,7 +277,7 @@ export function simulateLoreAnswer(question: string, state: AppState): LoreAnswe
   }
 
   return {
-    text: "질문과 이어지는 저장 기록을 찾지 못했습니다. 인물 이름(흥부, 놀부, 제비)이나 설정 키워드(박씨, 밥주걱, 강남)를 넣어 다시 물어봐 주세요.",
+    text: "질문과 이어지는 저장 기록을 찾지 못했습니다. 인물 이름(강도현/이서준, 윤가람, 하은채)이나 설정 키워드(게이트, 각성 등급, 회귀, 빙의)를 넣어 다시 물어봐 주세요.",
     blockIds: [],
     relationIds: [],
     conflictIds: [],
@@ -309,10 +310,10 @@ export function simulateConsistency(state: AppState): ConsistencyReport {
     foreshadowingRecovery: foreshadow,
     canonNote:
       open.length > 0
-        ? `자식 수, 제비 다리 방향 등 미해결 설정 오류 ${open.length}건이 남아 있습니다. 오류를 해결하면 설정이 더 단단해집니다.`
+        ? `주인공 각성 등급, 하은채 생사 등 미해결 설정 오류 ${open.length}건이 남아 있습니다. 오류를 해결하면 설정이 더 단단해집니다.`
         : "미해결 설정 오류가 없습니다. 설정이 잘 지켜지고 있습니다.",
     foreshadowNote:
-      "‘놀부의 박’과 ‘욕심의 대가 규칙’이 아직 회수되지 않은 떡밥입니다. 새 에피소드에서 회수해 보세요.",
+      "‘에르그의 정체’와 ‘윤가람의 전생 기억’이 아직 회수되지 않은 떡밥입니다. 새 에피소드에서 회수해 보세요.",
   };
 }
 

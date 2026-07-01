@@ -2,76 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+   Bauhaus 글쓰기 디자인 시스템 — 무채색 · 두 목소리 · 직각/무그림자.
+   "도구는 조용히, 작가의 글만 남는다." 색은 진짜 충돌 1건에만.
+   토큰 출처: apps/desktop/src/styles.css (harness/.../2026-06-26__bauhaus-writing-system)
+   ============================================================================= */
 :root {
   color-scheme: light;
+
+  /* paper & ink — 따뜻한 무채색 램프 (순백·순흑 회피) */
+  --paper: #ffffff;
+  --paper-2: #f5f5f7;
+  --line: #d2d2d7;
+  --ink-faint: #86868b;
+  --ink-soft: #6e6e73;
+  --ink-mid: #424245;
+  --ink: #1d1d1f;
+
+  /* 단일 신호색 — 진짜 충돌에만 (표면 <1%) */
+  --signal: #c8362b;
+  --signal-bg: #f7e9e7;
+
+  --r: 2px;
+  --r-pill: 9999px;
+
+  /* 두 목소리 */
+  --sans: "Pretendard", "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+  --serif: "Nanum Myeongjo", serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
 html {
-  /* 전체 UI를 한 단계 크게 (rem 기준 확대) */
+  /* 전체 UI를 한 단계 크게 (rem 기준) */
   font-size: 17px;
 }
 
 html,
 body {
-  font-family:
-    "Pretendard Variable",
-    Pretendard,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Apple SD Gothic Neo",
-    "Noto Sans KR",
-    "Segoe UI",
-    sans-serif;
-  background: #faf6ef;
-  color: #2c2418;
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d9cdb8 transparent;
+  scrollbar-color: var(--line) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #d9cdb8;
-  border-radius: 8px;
+  background: var(--line);
+  border-radius: var(--r);
 }
 *::-webkit-scrollbar-track {
   background: transparent;
 }
 
 @layer components {
+  /* 카드: 그림자 0, 헤어라인 + 종이 단차 */
   .card {
-    @apply rounded-2xl border border-paper-300 bg-white shadow-card;
+    @apply rounded-sm border border-line bg-paper;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-base font-semibold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-base font-semibold transition active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50;
   }
+  /* primary: 잉크 채움 */
   .btn-primary {
-    @apply btn bg-amber-600 text-white hover:bg-amber-700;
+    @apply btn border border-ink bg-ink text-paper hover:bg-black;
   }
+  /* green(확정/저장) → 무채 primary로 중화 (초록 폐기) */
   .btn-green {
-    @apply btn bg-emerald-600 text-white hover:bg-emerald-700;
+    @apply btn border border-ink bg-ink text-paper hover:bg-black;
   }
+  /* ghost: 잉크 윤곽 */
   .btn-ghost {
-    @apply btn border border-paper-300 bg-paper-100 text-stone-700 hover:bg-paper-200;
+    @apply btn border border-line bg-paper text-ink-mid hover:border-ink-mid hover:bg-paper-2;
   }
+  /* danger: 절제된 신호 */
   .btn-danger {
-    @apply btn border border-red-200 bg-red-50 text-red-700 hover:bg-red-100;
+    @apply btn border border-signal bg-paper text-signal hover:bg-signal-bg;
   }
   .input {
-    @apply w-full rounded-xl border border-paper-300 bg-white px-3.5 py-2.5 text-base text-stone-800 placeholder-stone-400 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200;
+    @apply w-full rounded-sm border border-line bg-paper px-3.5 py-2.5 text-base text-ink placeholder-ink-faint outline-none transition focus:border-ink-mid;
   }
   .label {
-    @apply mb-1.5 block text-sm font-bold text-stone-600;
+    @apply mb-1.5 block text-sm font-bold text-ink-soft;
   }
+  /* 칩: 거의 직각 헤어라인. 색은 meta/caller가 얹되 기본은 중립 */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium;
+    @apply inline-flex items-center gap-1 rounded-sm border border-line bg-paper px-2.5 py-1 text-sm font-medium text-ink-mid;
+  }
+  /* 형태 토큰: 의식(채운 원) ≠ 몸(윤곽 링) — 색 아닌 형태 */
+  .glyph {
+    @apply inline-block h-[18px] w-[18px] flex-none rounded-full;
+  }
+  .glyph-mind {
+    @apply bg-ink;
+  }
+  .glyph-body {
+    @apply border-2 border-ink bg-transparent;
+  }
+  /* 작가의 목소리: 원고 산문·인물 답변·인용은 명조로 */
+  .prose-writer {
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    line-height: 1.95;
+    letter-spacing: 0.005em;
+    color: var(--ink);
   }
 }
 
+/* 애니메이션 — 무채색이라 그대로 유지 */
 @keyframes fadeUp {
   from {
     opacity: 0;

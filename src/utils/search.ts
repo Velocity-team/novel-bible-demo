@@ -44,28 +44,46 @@ function scoreText(haystack: string, terms: string[]): number {
 /** 사전 정의된 키워드 → 우선 노출할 항목 id 매핑 (AI 의미검색 시뮬레이션) */
 const CURATED: { keyword: string; blockIds: string[]; relationIds: string[]; conflictIds: string[] }[] = [
   {
-    keyword: "흥부",
-    blockIds: ["c1", "o1", "l1"],
-    relationIds: ["rel1", "rel2", "rel8"],
+    keyword: "강도현",
+    blockIds: ["c1", "r3", "o2"],
+    relationIds: ["rel1", "rel2", "rel39"],
     conflictIds: ["cf1"],
   },
   {
-    keyword: "놀부",
-    blockIds: ["c2", "o2", "l2"],
-    relationIds: ["rel3", "rel17"],
+    keyword: "도현",
+    blockIds: ["c1", "r3", "o2"],
+    relationIds: ["rel1", "rel39"],
+    conflictIds: ["cf1"],
+  },
+  {
+    keyword: "윤가람",
+    blockIds: ["c2", "o3", "l5"],
+    relationIds: ["rel21", "rel25"],
     conflictIds: [],
   },
   {
-    keyword: "제비",
-    blockIds: ["c5", "e3", "r1"],
-    relationIds: ["rel8", "rel14"],
+    keyword: "하은채",
+    blockIds: ["c6", "l1", "l2"],
+    relationIds: ["ev2", "ev3"],
     conflictIds: ["cf2"],
   },
   {
-    keyword: "박",
-    blockIds: ["i1", "e5", "r2"],
-    relationIds: ["rel12", "rel15"],
-    conflictIds: ["cf3"],
+    keyword: "게이트",
+    blockIds: ["l1", "l6", "r1"],
+    relationIds: ["rel32", "rel27"],
+    conflictIds: ["cf5"],
+  },
+  {
+    keyword: "각성",
+    blockIds: ["c1", "r2", "i1"],
+    relationIds: ["rel39"],
+    conflictIds: ["cf1"],
+  },
+  {
+    keyword: "회귀",
+    blockIds: ["r3", "c5", "e1"],
+    relationIds: ["rel40", "rel26"],
+    conflictIds: ["cf9"],
   },
 ];
 

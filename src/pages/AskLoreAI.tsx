@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
+import { Icon } from "../components/Icon";
 import { simulateLoreAnswer } from "../utils/aiSim";
 import { blockName, relationLabel } from "../utils/search";
 
 const SUGGESTED = [
-  "흥부와 놀부는 어떤 사이야?",
-  "제비는 어느 쪽 다리를 다쳤어?",
-  "박은 언제 탈 수 있어?",
-  "박씨는 누가 줬어?",
-  "흥부네 자식은 몇 명이야?",
+  "주인공은 누구야? 강도현이랑 이서준은 무슨 관계야?",
+  "하은채는 왜 죽었다가 살아나?",
+  "주인공 각성 등급이 왜 문제야?",
+  "윤가람은 어떤 인물이야?",
+  "회귀랑 빙의 설정을 정리해줘",
   "아직 회수 안 된 떡밥이 있어?",
   "지금 설정 오류가 있는 부분은 어디야?",
   "다음 에피소드로 뭘 쓰면 좋을까?",
@@ -75,9 +76,9 @@ export default function AskLoreAI() {
     <div className="fade-up flex h-[calc(100vh-140px)] flex-col space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-extrabold text-stone-800">AI에게 물어보기</h2>
-          <p className="text-base text-stone-500">
-            <b className="text-stone-700">「{state.project.title}」</b> 설정에 대해 물어보면, 저장된
+          <h2 className="text-2xl font-bold tracking-tight text-ink">AI에게 물어보기</h2>
+          <p className="text-base leading-relaxed text-ink-soft">
+            <b className="text-ink-mid">「{state.project.title}」</b> 설정에 대해 물어보면, 저장된
             기록에서 관련 인물·사건·규칙을 찾아 답해 줘요.
           </p>
         </div>
@@ -92,9 +93,9 @@ export default function AskLoreAI() {
       <div className="card flex-1 space-y-4 overflow-y-auto p-5">
         {state.chatHistory.length === 0 && !thinking && (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <span className="text-5xl">💬</span>
-            <p className="text-base text-stone-500">
-              지금은 <b className="text-stone-700">「{state.project.title}」</b>를 예시로 답해 드려요.
+            <Icon name="chat" size={40} className="text-ink-faint" />
+            <p className="text-base leading-relaxed text-ink-soft">
+              지금은 <b className="text-ink-mid">「{state.project.title}」</b>를 예시로 답해 드려요.
               <br />
               아래 예시 질문을 눌러 시작해 보세요.
             </p>
@@ -102,7 +103,7 @@ export default function AskLoreAI() {
               {SUGGESTED.map((s) => (
                 <button
                   key={s}
-                  className="chip cursor-pointer border border-paper-300 bg-white px-4 py-2 text-base text-stone-600 transition hover:border-amber-400 hover:text-amber-800"
+                  className="chip cursor-pointer px-4 py-2 text-base text-ink-mid transition hover:border-ink-mid hover:text-ink"
                   onClick={() => ask(s, true)}
                 >
                   {s}
@@ -115,26 +116,24 @@ export default function AskLoreAI() {
         {state.chatHistory.map((m) =>
           m.role === "user" ? (
             <div key={m.id} className="flex justify-end">
-              <div className="max-w-[80%] rounded-2xl rounded-br-md bg-amber-600 px-4 py-3 text-base text-white">
+              <div className="max-w-[80%] rounded-sm bg-paper-2 px-4 py-3 text-base leading-relaxed text-ink">
                 {m.text}
               </div>
             </div>
           ) : (
             <div key={m.id} className="flex justify-start">
-              <div className="max-w-[90%] space-y-3 rounded-2xl rounded-bl-md border border-paper-300 bg-paper-100 px-4 py-3">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-amber-700">
-                  📚 노벨 바이블 AI
-                </div>
-                <p className="text-base leading-relaxed text-stone-700">{m.text}</p>
+              <div className="max-w-[90%] space-y-3">
+                <div className="text-sm text-ink-soft">노벨 바이블 AI</div>
+                <p className="prose-writer">{m.text}</p>
 
                 {m.relatedBlockIds.length > 0 && (
                   <div>
-                    <div className="mb-1 text-sm font-bold text-stone-500">관련 설정 카드</div>
+                    <div className="mb-1 text-sm font-bold text-ink-soft">관련 설정 카드</div>
                     <div className="flex flex-wrap gap-1.5">
                       {m.relatedBlockIds.map((id) => (
                         <button
                           key={id}
-                          className="chip cursor-pointer bg-violet-100 text-violet-800 hover:bg-violet-200"
+                          className="chip cursor-pointer border border-line bg-paper-2 text-ink-mid hover:bg-paper-300"
                           onClick={() => openBlockDetail(id)}
                         >
                           {blockName(state, id)}
@@ -146,12 +145,12 @@ export default function AskLoreAI() {
 
                 {m.relatedRelationIds.length > 0 && (
                   <div>
-                    <div className="mb-1 text-sm font-bold text-stone-500">관련 관계</div>
+                    <div className="mb-1 text-sm font-bold text-ink-soft">관련 관계</div>
                     <div className="flex flex-wrap gap-1.5">
                       {m.relatedRelationIds.map((id) => {
                         const r = state.relations.find((x) => x.id === id);
                         return r ? (
-                          <span key={id} className="chip border border-paper-300 bg-white text-stone-600">
+                          <span key={id} className="chip text-ink-mid">
                             {relationLabel(state, r)}
                           </span>
                         ) : null;
@@ -162,17 +161,17 @@ export default function AskLoreAI() {
 
                 {m.relatedConflictIds.length > 0 && (
                   <div>
-                    <div className="mb-1 text-sm font-bold text-stone-500">관련 설정 오류</div>
+                    <div className="mb-1 text-sm font-bold text-ink-soft">관련 설정 오류</div>
                     <div className="flex flex-wrap gap-1.5">
                       {m.relatedConflictIds.map((id) => {
                         const c = state.conflicts.find((x) => x.id === id);
                         return c ? (
                           <button
                             key={id}
-                            className="chip cursor-pointer bg-red-100 text-red-700 hover:bg-red-200"
+                            className="chip cursor-pointer border border-signal bg-signal-bg text-signal hover:bg-signal hover:text-paper"
                             onClick={() => navigate("conflicts")}
                           >
-                            🚨 {c.title}
+                            <Icon name="alert" size={13} className="shrink-0" /> {c.title}
                           </button>
                         ) : null;
                       })}
@@ -189,13 +188,13 @@ export default function AskLoreAI() {
                           navigate("dashboard", { graphFocusId: m.relatedBlockIds[0] })
                         }
                       >
-                        🗺️ 지도에서 보기
+                        지도에서 보기
                       </button>
                       <button
                         className="btn-ghost px-3 py-1.5 text-sm"
                         onClick={() => openBlockDetail(m.relatedBlockIds[0])}
                       >
-                        🗂️ 설정 카드 열기
+                        설정 카드 열기
                       </button>
                     </>
                   )}
@@ -203,7 +202,7 @@ export default function AskLoreAI() {
                     className="btn-ghost px-3 py-1.5 text-sm"
                     onClick={() => copy(m.id, m.text)}
                   >
-                    {copiedId === m.id ? "✓ 복사됨" : "📄 답변 복사"}
+                    {copiedId === m.id ? "복사됨" : "답변 복사"}
                   </button>
                 </div>
               </div>
@@ -213,15 +212,15 @@ export default function AskLoreAI() {
 
         {thinking && (
           <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-2xl border border-paper-300 bg-paper-100 px-4 py-3">
+            <div className="flex items-center gap-2 rounded-sm border border-line bg-paper-2 px-4 py-3">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="pulse-dot h-2 w-2 rounded-full bg-amber-500"
+                  className="pulse-dot h-2 w-2 rounded-full bg-ink-soft"
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
-              <span className="text-base text-stone-500">저장된 설정을 찾아보는 중…</span>
+              <span className="text-base text-ink-soft">저장된 설정을 찾아보는 중…</span>
             </div>
           </div>
         )}
@@ -234,7 +233,7 @@ export default function AskLoreAI() {
           {SUGGESTED.slice(0, 4).map((s) => (
             <button
               key={s}
-              className="chip shrink-0 cursor-pointer border border-paper-300 bg-white text-stone-500 hover:text-amber-800"
+              className="chip shrink-0 cursor-pointer text-ink-soft hover:text-ink"
               onClick={() => ask(s, true)}
             >
               {s}
@@ -245,18 +244,18 @@ export default function AskLoreAI() {
 
       {/* 직접 입력 안내 (체험 화면) */}
       {demoHint && (
-        <div className="fade-up rounded-2xl border border-amber-300 bg-amber-50 p-4">
-          <div className="text-base font-bold text-amber-900">
-            💡 지금은 편의상 보여 드리는 체험 화면이에요
+        <div className="fade-up rounded-sm border border-line bg-paper-2 p-4">
+          <div className="text-base font-bold text-ink">
+            지금은 편의상 보여 드리는 체험 화면이에요
           </div>
-          <p className="mt-1 text-sm leading-relaxed text-amber-800">
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             직접 입력하신 질문에는 아직 답해 드릴 수 없어요. 아래 <b>예시 질문</b>을 눌러 체험해 보세요.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTED.map((s) => (
               <button
                 key={s}
-                className="chip cursor-pointer border border-amber-300 bg-white px-3 py-1.5 text-sm text-amber-800 transition hover:bg-amber-100"
+                className="chip cursor-pointer px-3 py-1.5 text-sm text-ink-mid transition hover:bg-paper-2"
                 onClick={() => ask(s, true)}
               >
                 {s}
@@ -270,7 +269,7 @@ export default function AskLoreAI() {
       <div className="flex gap-2">
         <input
           className="input flex-1"
-          placeholder="예: 제비가 마지막으로 나온 회차는?"
+          placeholder="예: 하은채가 마지막으로 나온 회차는?"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && ask(input)}

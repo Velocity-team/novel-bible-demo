@@ -4,6 +4,7 @@ import { aiRecall } from "../utils/aiSim";
 import { relationNatural } from "../utils/search";
 import { AIStatusBadge, SeverityBadge, Tag, TypeBadge } from "./Badge";
 import { BLOCK_TYPE_META } from "./meta";
+import { Icon } from "./Icon";
 
 /** 어느 화면에서나 열 수 있는 오른쪽 상세 패널 */
 export default function BlockDetailPanel() {
@@ -76,26 +77,27 @@ export default function BlockDetailPanel() {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-stone-900/30 backdrop-blur-[2px]"
+        className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px]"
         onClick={() => openBlockDetail(null)}
       />
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-paper-300 bg-white shadow-2xl transition-transform">
-        <div className="flex items-start justify-between border-b border-paper-300 px-5 py-4">
+      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-line bg-paper transition-transform">
+        <div className="flex items-start justify-between border-b border-line px-5 py-4">
           <div>
             <div className="mb-1.5 flex flex-wrap gap-1.5">
               <TypeBadge type={block.type} />
               <AIStatusBadge status={block.aiStatus} />
             </div>
-            <h2 className="text-xl font-bold text-stone-800">
-              {BLOCK_TYPE_META[block.type].icon} {block.name}
+            <h2 className="flex items-center gap-2 text-xl font-bold text-ink">
+              <Icon name={BLOCK_TYPE_META[block.type].icon} size={18} className="shrink-0 text-ink-soft" />
+              {block.name}
             </h2>
           </div>
           <button
-            className="rounded-md p-1.5 text-stone-400 hover:bg-paper-100"
+            className="rounded-sm p-1.5 text-ink-faint transition hover:bg-paper-2 hover:text-ink-mid"
             onClick={() => openBlockDetail(null)}
             aria-label="닫기"
           >
-            ✕
+            <Icon name="close" size={18} />
           </button>
         </div>
 
@@ -154,14 +156,14 @@ export default function BlockDetailPanel() {
             </div>
           ) : (
             <>
-              <p className="text-base leading-relaxed text-stone-700">{block.description}</p>
+              <p className="text-base leading-relaxed text-ink-mid">{block.description}</p>
 
               {Object.keys(block.attributes).length > 0 && (
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(block.attributes).map(([k, v]) => (
-                    <div key={k} className="rounded-xl bg-paper-100 px-3 py-2">
-                      <div className="text-xs font-bold text-stone-500">{k}</div>
-                      <div className="text-base font-medium text-stone-800">{v}</div>
+                    <div key={k} className="rounded-sm bg-paper-2 px-3 py-2">
+                      <div className="text-xs font-bold text-ink-soft">{k}</div>
+                      <div className="text-base font-medium text-ink">{v}</div>
                     </div>
                   ))}
                 </div>
@@ -169,9 +171,7 @@ export default function BlockDetailPanel() {
 
               <div className="flex flex-wrap gap-1.5">
                 {block.firstAppearance && (
-                  <span className="chip border border-paper-300 text-stone-500">
-                    첫 등장 {block.firstAppearance}
-                  </span>
+                  <span className="chip text-ink-soft">첫 등장 {block.firstAppearance}</span>
                 )}
                 {block.tags.map((t) => (
                   <Tag key={t}>{t}</Tag>
@@ -183,13 +183,13 @@ export default function BlockDetailPanel() {
           {/* AI 기억 요약 */}
           <section>
             <button
-              className="btn-green w-full"
+              className="btn-primary w-full"
               onClick={() => setRecall(aiRecall(block.id, state))}
             >
-              🧠 AI가 기억하는 내용 보기
+              AI가 기억하는 내용 보기
             </button>
             {recall && (
-              <div className="fade-up mt-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-base leading-relaxed text-emerald-900">
+              <div className="fade-up mt-2 rounded-sm border border-line bg-paper-2 p-3 text-base leading-relaxed text-ink-mid">
                 {recall}
               </div>
             )}
@@ -203,14 +203,14 @@ export default function BlockDetailPanel() {
                 {block.sourceEvidence.map((e, i) => (
                   <li
                     key={i}
-                    className="rounded-xl border-l-4 border-amber-400 bg-paper-100 px-3 py-2 text-sm italic leading-relaxed text-stone-600"
+                    className="prose-writer rounded-sm border border-line bg-paper-2 px-3 py-2 italic"
                   >
                     {e}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-ink-soft">
                 아직 연결된 근거 문장이 없습니다. 원고를 올리면 자동으로 채워집니다.
               </p>
             )}
@@ -235,20 +235,20 @@ export default function BlockDetailPanel() {
               {relations.map((r) => (
                 <li
                   key={r.id}
-                  className="group flex items-center justify-between gap-2 rounded-xl bg-paper-100 px-3 py-2 text-sm text-stone-700"
+                  className="group flex items-center justify-between gap-2 rounded-sm bg-paper-2 px-3 py-2 text-sm text-ink-mid"
                 >
                   <span>{relationNatural(state, r)}</span>
                   <button
-                    className="hidden text-red-400 hover:text-red-600 group-hover:block"
+                    className="hidden text-ink-faint hover:text-signal group-hover:block"
                     onClick={() => deleteRelation(r.id)}
                     title="관계 삭제"
                   >
-                    ✕
+                    <Icon name="close" size={14} />
                   </button>
                 </li>
               ))}
               {relations.length === 0 && (
-                <li className="text-sm text-stone-500">아직 연결된 관계가 없습니다.</li>
+                <li className="text-sm text-ink-soft">아직 연결된 관계가 없습니다.</li>
               )}
             </ul>
           </section>
@@ -261,9 +261,9 @@ export default function BlockDetailPanel() {
                 {conflicts.map((c) => (
                   <li
                     key={c.id}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm"
+                    className="flex items-center justify-between gap-2 rounded-sm border border-signal bg-signal-bg px-3 py-2 text-sm"
                   >
-                    <span className="text-stone-700">{c.title}</span>
+                    <span className="text-ink-mid">{c.title}</span>
                     <SeverityBadge severity={c.severity} />
                   </li>
                 ))}
@@ -272,20 +272,20 @@ export default function BlockDetailPanel() {
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-paper-300 px-5 py-3">
+        <div className="flex gap-2 border-t border-line px-5 py-3">
           {!editing && (
-            <button className="btn-ghost flex-1" onClick={() => setEditing(true)}>
-              ✏️ 수정
+            <button className="btn-ghost inline-flex flex-1 items-center justify-center gap-1.5" onClick={() => setEditing(true)}>
+              <Icon name="edit" size={16} /> 수정
             </button>
           )}
           <button
-            className="btn-ghost flex-1"
+            className="btn-ghost inline-flex flex-1 items-center justify-center gap-1.5"
             onClick={() => {
               openBlockDetail(null);
               navigate("dashboard", { graphFocusId: block.id });
             }}
           >
-            🗺️ 지도에서 보기
+            <Icon name="map" size={16} /> 지도에서 보기
           </button>
           <button
             className="btn-danger"
@@ -294,8 +294,9 @@ export default function BlockDetailPanel() {
                 deleteBlock(block.id);
               }
             }}
+            aria-label="삭제"
           >
-            🗑️
+            <Icon name="delete" size={16} />
           </button>
         </div>
       </aside>
