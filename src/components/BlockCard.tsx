@@ -13,21 +13,19 @@ export default function BlockCard({
   return (
     <button
       onClick={onClick}
-      className={`card w-full p-5 text-left transition hover:-translate-y-0.5 hover:shadow-card-hover ${
-        selected ? "border-amber-500 ring-2 ring-amber-200" : ""
+      className={`card w-full p-5 text-left transition ${
+        selected ? "border-ink bg-paper-2" : "hover:border-ink-mid"
       }`}
     >
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <TypeBadge type={block.type} />
         <AIStatusBadge status={block.aiStatus} />
         {block.firstAppearance && (
-          <span className="chip border border-paper-300 text-stone-500">
-            첫 등장 {block.firstAppearance}
-          </span>
+          <span className="chip text-ink-soft">첫 등장 {block.firstAppearance}</span>
         )}
       </div>
-      <div className="mb-1 text-lg font-bold text-stone-800">{block.name}</div>
-      <p className="mb-2 line-clamp-2 text-base leading-relaxed text-stone-500">
+      <div className="mb-1 text-lg font-bold text-ink">{block.name}</div>
+      <p className="mb-2 line-clamp-2 text-base leading-relaxed text-ink-soft">
         {block.description}
       </p>
       <div className="flex flex-wrap gap-1">

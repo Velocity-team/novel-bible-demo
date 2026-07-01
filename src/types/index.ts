@@ -80,7 +80,7 @@ export interface Episode {
   date?: WorldDate;
 }
 
-/** 작품 속(인게임) 시간. 동화라 연·월 대신 연도 차수와 계절로 표현한다. */
+/** 작품 속(인게임) 시간. 실제 달력 대신 작품 연도 차수와 계절로 표현한다. */
 export interface WorldDate {
   /** 작품 1년차 = 1, 이듬해 = 2 … */
   year: number;
@@ -106,7 +106,7 @@ export type Tile =
   | "gourd"
   | "pot";
 
-/** 흥부네 초가집·놀부네 기와집·강남 같은 큰 장소 단위 */
+/** 게이트·길드 본부·던전 같은 큰 장소 단위 */
 export interface MapZone {
   id: string;
   kind: "home" | "village" | "faraway";
@@ -281,7 +281,7 @@ export interface SubstoryCandidate {
   riskReason: string;
   relatedCharacterIds: string[];
   relatedEpisodes: string[];
-  /** 이 추천이 다루는 인물 관계 (예: "흥부 ↔ 흥부 아내") */
+  /** 이 추천이 다루는 인물 관계 (예: "도현 ↔ 윤가람") */
   relationLabel: string;
   /** 방향을 한눈에 보여 주는 키워드 묶음 */
   keywords: string[];

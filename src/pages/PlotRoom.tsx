@@ -14,6 +14,7 @@ import {
   MEETING_SITUATIONS,
 } from "../data/mockData";
 import MeetingRoomPixel from "./MeetingRoomPixel";
+import { Icon } from "../components/Icon";
 
 type Tab = "persona" | "meeting" | "guardrail" | "recommend";
 
@@ -26,39 +27,39 @@ const LOADING_STEPS = [
 ];
 
 const SUBSTORY_TYPE_COLOR: Record<SubstoryType, string> = {
-  "감정선 보강형": "bg-violet-100 text-violet-800",
-  "관계 변화형": "bg-blue-100 text-blue-800",
-  "복선 회수형": "bg-amber-100 text-amber-800",
-  "갈등 확장형": "bg-red-100 text-red-700",
-  "코미디 완충형": "bg-emerald-100 text-emerald-800",
+  "감정선 보강형": "bg-paper-2 text-ink-mid border border-line",
+  "관계 변화형": "bg-paper-2 text-ink-mid border border-line",
+  "복선 회수형": "bg-paper-2 text-ink-mid border border-line",
+  "갈등 확장형": "bg-paper-2 text-ink-mid border border-line",
+  "코미디 완충형": "bg-paper-2 text-ink-mid border border-line",
 };
 
 const RISK_COLOR: Record<RiskLevel, string> = {
-  낮음: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  중간: "bg-amber-100 text-amber-800 border-amber-200",
-  높음: "bg-red-100 text-red-700 border-red-200",
+  낮음: "bg-paper-2 text-ink-mid border-line",
+  중간: "bg-paper text-ink-soft border-line",
+  높음: "bg-signal-bg text-signal border-signal",
 };
 
 const RISK_ICON: Record<RiskLevel, string> = {
-  낮음: "🟢",
-  중간: "🟡",
-  높음: "🔴",
+  낮음: "○",
+  중간: "◑",
+  높음: "▲",
 };
 
 const CHAR_COLOR: Record<string, string> = {
-  c1: "bg-amber-100 text-amber-900 border-amber-300",
-  c2: "bg-stone-100 text-stone-800 border-stone-300",
-  c3: "bg-emerald-100 text-emerald-900 border-emerald-300",
-  c4: "bg-red-50 text-red-900 border-red-200",
-  c5: "bg-sky-100 text-sky-900 border-sky-300",
+  c1: "bg-paper-2 text-ink border-line",
+  c2: "bg-paper-2 text-ink-mid border-line",
+  c3: "bg-paper-2 text-ink-mid border-line",
+  c4: "bg-paper-2 text-ink-mid border-line",
+  c5: "bg-paper text-ink-soft border-line",
 };
 
 const CHAR_AVATAR: Record<string, string> = {
-  c1: "🪴",
-  c2: "🏚️",
-  c3: "🧺",
-  c4: "🍚",
-  c5: "🐦",
+  c1: "도",
+  c2: "윤",
+  c3: "문",
+  c4: "채",
+  c5: "에",
 };
 
 const VALID_TABS: Tab[] = ["persona", "meeting", "guardrail", "recommend"];
@@ -151,10 +152,10 @@ export default function PlotRoom() {
   const keywordSummary = situation ? getMeetingKeywords(situation) : null;
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: "persona", label: "캐릭터 페르소나", icon: "🎭" },
-    { key: "meeting", label: "캐릭터 회의", icon: "🗣️" },
-    { key: "guardrail", label: "작가 가드레일", icon: "🛡️" },
-    { key: "recommend", label: "관계별 시나리오 추천", icon: "💡" },
+    { key: "persona", label: "캐릭터 페르소나", icon: "character" },
+    { key: "meeting", label: "캐릭터 회의", icon: "chat" },
+    { key: "guardrail", label: "작가 가드레일", icon: "shield" },
+    { key: "recommend", label: "관계별 시나리오 추천", icon: "idea" },
   ];
 
   const saveRecAsNote = (candidate: SubstoryCandidate) => {
@@ -174,31 +175,30 @@ export default function PlotRoom() {
       {/* 헤더 */}
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-3xl">🎬</span>
-          <h2 className="text-2xl font-extrabold text-stone-800">캐릭터 회의실</h2>
-          <span className="chip bg-emerald-500 text-white">NEW</span>
-          <span className="chip bg-violet-100 text-violet-700">PlotRoom</span>
+          <h2 className="text-3xl font-bold tracking-tight text-ink">캐릭터 회의실</h2>
+          <span className="chip bg-ink text-paper">NEW</span>
+          <span className="chip bg-paper-2 text-ink-mid">PlotRoom</span>
         </div>
-        <p className="mt-1 text-base text-stone-500">
-          캐릭터들이 각자의 기억·관계로 상황에 반응하면, 그 결과를 <b className="text-stone-700">키워드</b>로
-          정리하고 <b className="text-stone-700">관계별 시나리오 방향</b>을 추천합니다. 추천은 키워드와
+        <p className="mt-1 max-w-2xl text-base leading-relaxed text-ink-soft">
+          캐릭터들이 각자의 기억·관계로 상황에 반응하면, 그 결과를 <b className="text-ink">키워드</b>로
+          정리하고 <b className="text-ink">관계별 시나리오 방향</b>을 추천합니다. 추천은 키워드와
           방향까지 — 실제 집필은 작가가 직접 합니다.
         </p>
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-1 rounded-2xl border border-paper-300 bg-paper-100 p-1.5">
+      <div className="flex gap-1 rounded-sm border border-line bg-paper-2 p-1.5">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-semibold transition ${
               tab === t.key
-                ? "bg-white text-stone-800 shadow-card"
-                : "text-stone-500 hover:text-stone-700"
+                ? "bg-paper text-ink"
+                : "text-ink-soft hover:text-ink-mid"
             }`}
           >
-            <span>{t.icon}</span>
+            <Icon name={t.icon} size={16} className="shrink-0" />
             <span className="hidden sm:inline">{t.label}</span>
           </button>
         ))}
@@ -207,7 +207,7 @@ export default function PlotRoom() {
       {/* ── 탭 1: 캐릭터 페르소나 ── */}
       {tab === "persona" && (
         <div className="fade-up space-y-3">
-          <p className="text-sm text-stone-500">
+          <p className="text-sm leading-relaxed text-ink-soft">
             Story Bible 데이터에서 자동 추출된 캐릭터 페르소나입니다. 에이전트가 회의 시 이 카드를 장기 기억으로 참조합니다.
           </p>
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
@@ -215,38 +215,40 @@ export default function PlotRoom() {
               const block = state.blocks.find((b) => b.id === persona.characterId);
               if (!block) return null;
               const isOpen = expandedPersona === persona.characterId;
-              const colorClass = CHAR_COLOR[persona.characterId] ?? "bg-paper-100 text-stone-800 border-paper-300";
+              const colorClass = CHAR_COLOR[persona.characterId] ?? "bg-paper-2 text-ink border-line";
 
               return (
                 <div key={persona.characterId} className={`card overflow-hidden border ${colorClass.split(" ")[2]}`}>
                   <div
-                    className={`flex cursor-pointer items-center gap-3 p-4 ${colorClass.split(" ").slice(0, 2).join(" ")}`}
+                    className={`flex cursor-pointer items-start gap-3 p-4 ${colorClass.split(" ").slice(0, 2).join(" ")}`}
                     onClick={() => setExpandedPersona(isOpen ? null : persona.characterId)}
                   >
-                    <span className="text-3xl">{CHAR_AVATAR[persona.characterId]}</span>
-                    <div className="flex-1">
-                      <div className="text-lg font-extrabold">{block.name}</div>
-                      <div className="text-sm opacity-70">{block.description.slice(0, 40)}…</div>
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-paper text-lg font-bold text-ink-mid">{CHAR_AVATAR[persona.characterId]}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1 truncate text-lg font-bold">{block.name}</div>
+                        <span className="shrink-0 text-ink-faint">{isOpen ? "▲" : "▼"}</span>
+                      </div>
+                      <div className="truncate text-sm opacity-70">{block.description.slice(0, 40)}…</div>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {persona.ragSources.map((ep) => (
+                          <span key={ep} className="chip font-mono text-xs">{ep}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {persona.ragSources.map((ep) => (
-                        <span key={ep} className="chip bg-white/60 text-xs">{ep}</span>
-                      ))}
-                    </div>
-                    <span className="text-stone-400">{isOpen ? "▲" : "▼"}</span>
                   </div>
 
                   {isOpen && (
                     <div className="fade-up space-y-3 p-4">
                       <div>
                         <div className="label">말투</div>
-                        <p className="text-sm leading-relaxed text-stone-700">{persona.speechStyle}</p>
+                        <p className="text-sm leading-relaxed text-ink-mid">{persona.speechStyle}</p>
                       </div>
                       <div>
                         <div className="label">성격</div>
                         <div className="flex flex-wrap gap-1">
                           {persona.personality.map((p) => (
-                            <span key={p} className="chip bg-paper-100 text-stone-600 text-xs">{p}</span>
+                            <span key={p} className="chip text-xs">{p}</span>
                           ))}
                         </div>
                       </div>
@@ -254,8 +256,8 @@ export default function PlotRoom() {
                         <div className="label">목표</div>
                         <ul className="space-y-1">
                           {persona.goals.map((g) => (
-                            <li key={g} className="flex items-start gap-2 text-sm text-stone-700">
-                              <span className="mt-0.5 shrink-0 text-amber-500">→</span>{g}
+                            <li key={g} className="flex items-start gap-2 text-sm text-ink-mid">
+                              <span className="mt-0.5 shrink-0 text-ink-mid">→</span>{g}
                             </li>
                           ))}
                         </ul>
@@ -264,8 +266,8 @@ export default function PlotRoom() {
                         <div className="label">핵심 기억 (Knowledge Graph)</div>
                         <ul className="space-y-1">
                           {persona.coreMemories.map((m, i) => (
-                            <li key={i} className="flex items-start gap-2 rounded-lg bg-paper-100 px-3 py-2 text-sm text-stone-700">
-                              <span className="chip bg-white text-xs text-stone-500 shrink-0">{m.episode}</span>
+                            <li key={i} className="flex items-start gap-2 rounded-sm bg-paper-2 px-3 py-2 text-sm text-ink-mid">
+                              <span className="chip font-mono text-xs shrink-0">{m.episode}</span>
                               {m.content}
                             </li>
                           ))}
@@ -275,7 +277,7 @@ export default function PlotRoom() {
                         <div className="label">금지 행동</div>
                         <ul className="space-y-1">
                           {persona.forbiddenActions.map((f) => (
-                            <li key={f} className="flex items-start gap-2 text-sm text-red-700">
+                            <li key={f} className="flex items-start gap-2 text-sm text-signal">
                               <span className="shrink-0">✕</span>{f}
                             </li>
                           ))}
@@ -309,16 +311,16 @@ export default function PlotRoom() {
               <label className="label">상황 입력</label>
               <textarea
                 className="input min-h-[90px] resize-none"
-                placeholder="예: 흥부가 박을 지금 타야 할지, 가을까지 기다려야 할지 결정해야 한다."
+                placeholder="예: 이번 게이트를 지금 공략할지, 전생 지식을 믿고 때를 기다릴지 도현이 결정해야 한다."
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
                 disabled={phase !== "idle"}
               />
             </div>
             {situationHint && (
-              <div className="fade-up rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm leading-relaxed text-amber-800">
-                💡 지금은 편의상 보여 드리는 체험 화면이라, 직접 입력한 상황으로는 회의를 진행할 수 없어요.
-                아래 <b>‘빠른 상황 선택’</b>에서 예시 상황을 눌러 주세요. 👇
+              <div className="fade-up rounded-sm border border-line bg-paper-2 p-3 text-sm leading-relaxed text-ink-mid">
+                지금은 편의상 보여 드리는 체험 화면이라, 직접 입력한 상황으로는 회의를 진행할 수 없어요.
+                아래 <b>‘빠른 상황 선택’</b>에서 예시 상황을 눌러 주세요.
               </div>
             )}
             <div>
@@ -327,12 +329,12 @@ export default function PlotRoom() {
                 {MEETING_SITUATIONS.map((s) => (
                   <button
                     key={s}
-                    className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition ${
+                    className={`w-full rounded-sm border px-3 py-2 text-left text-sm transition ${
                       situation === s
-                        ? "border-amber-400 bg-amber-50 text-amber-900"
+                        ? "border-ink bg-paper-2 text-ink"
                         : situationHint
-                          ? "border-amber-300 bg-white text-stone-700 hover:bg-amber-50"
-                          : "border-paper-300 bg-white text-stone-600 hover:bg-paper-100"
+                          ? "border-line bg-paper text-ink-mid hover:bg-paper-2"
+                          : "border-line bg-paper text-ink-soft hover:bg-paper-2"
                     }`}
                     onClick={() => {
                       setSituation(s);
@@ -355,8 +357,8 @@ export default function PlotRoom() {
                     disabled={phase !== "idle"}
                     className={`chip cursor-pointer transition ${
                       selectedChars.includes(c.id)
-                        ? "bg-amber-600 text-white"
-                        : "border border-paper-300 bg-white text-stone-500 hover:bg-paper-100"
+                        ? "bg-ink text-paper"
+                        : "text-ink-soft hover:bg-paper-2"
                     }`}
                   >
                     {CHAR_AVATAR[c.id]} {c.name}
@@ -369,7 +371,7 @@ export default function PlotRoom() {
               onClick={startMeeting}
               disabled={phase !== "idle" || !situation.trim() || selectedChars.length === 0}
             >
-              {phase === "idle" ? "🗣️ 회의 시작" : phase === "loading" ? "분석 중…" : "✓ 회의 완료"}
+              {phase === "idle" ? "회의 시작" : phase === "loading" ? "분석 중…" : "✓ 회의 완료"}
             </button>
             {phase !== "idle" && (
               <button
@@ -390,8 +392,8 @@ export default function PlotRoom() {
           <section className="space-y-3">
             {phase === "idle" && (
               <div className="card flex min-h-72 flex-col items-center justify-center p-8 text-center">
-                <span className="mb-3 text-5xl">🗣️</span>
-                <p className="max-w-md text-base leading-relaxed text-stone-500">
+                <Icon name="chat" size={40} className="mb-3 text-ink-faint" />
+                <p className="max-w-md text-base leading-relaxed text-ink-soft">
                   상황을 입력하고 참여할 캐릭터를 선택하면, 각자의 기억·목표·관계를 바탕으로 반응합니다. 완성 문장이 아닌, 작가를 위한 창작 참고 자료입니다.
                 </p>
               </div>
@@ -403,11 +405,11 @@ export default function PlotRoom() {
                   {[0, 1, 2].map((i) => (
                     <span
                       key={i}
-                      className="pulse-dot h-2.5 w-2.5 rounded-full bg-amber-500"
+                      className="pulse-dot h-2.5 w-2.5 rounded-full bg-ink-soft"
                       style={{ animationDelay: `${i * 0.2}s` }}
                     />
                   ))}
-                  <span className="text-base font-semibold text-amber-800">분석 중</span>
+                  <span className="text-base font-semibold text-ink-soft">분석 중</span>
                 </div>
                 <div className="space-y-2">
                   {LOADING_STEPS.map((step, i) => (
@@ -418,11 +420,11 @@ export default function PlotRoom() {
                       }`}
                     >
                       <span className={`h-4 w-4 shrink-0 rounded-full text-xs flex items-center justify-center ${
-                        i < loadingStep ? "bg-emerald-500 text-white" : i === loadingStep ? "bg-amber-500 text-white" : "bg-paper-300 text-stone-400"
+                        i < loadingStep ? "bg-ink text-paper" : i === loadingStep ? "bg-ink text-paper" : "bg-paper-2 text-ink-faint"
                       }`}>
                         {i < loadingStep ? "✓" : i + 1}
                       </span>
-                      <span className={i <= loadingStep ? "text-stone-700" : "text-stone-400"}>{step}</span>
+                      <span className={i <= loadingStep ? "text-ink-mid" : "text-ink-faint"}>{step}</span>
                     </div>
                   ))}
                 </div>
@@ -431,35 +433,35 @@ export default function PlotRoom() {
 
             {phase === "done" && (
               <div className="fade-up card p-5">
-                <div className="mb-1 text-xs font-bold uppercase tracking-widest text-stone-400">회의 상황</div>
-                <p className="mb-4 text-base font-semibold text-stone-800">"{situation}"</p>
+                <div className="mb-1 text-xs font-bold uppercase tracking-widest text-ink-faint">회의 상황</div>
+                <p className="mb-4 text-base font-semibold text-ink">"{situation}"</p>
                 <div className="space-y-4">
                   {currentTurns.slice(0, revealedTurns).map((turn, i) => {
-                    const colorClass = CHAR_COLOR[turn.characterId] ?? "bg-paper-100 text-stone-800 border-paper-300";
+                    const colorClass = CHAR_COLOR[turn.characterId] ?? "bg-paper-2 text-ink border-line";
                     const isThoughtOpen = expandedThought === `${i}`;
                     return (
-                      <div key={i} className={`fade-up rounded-2xl border p-4 ${colorClass.split(" ")[2]} ${colorClass.split(" ").slice(0, 2).join(" ")}`}>
+                      <div key={i} className={`fade-up rounded-sm border p-4 ${colorClass.split(" ")[2]} ${colorClass.split(" ").slice(0, 2).join(" ")}`}>
                         <div className="mb-2 flex items-center gap-2">
-                          <span className="text-xl">{CHAR_AVATAR[turn.characterId]}</span>
-                          <span className="font-extrabold text-base">{turn.characterName}</span>
-                          <span className="chip bg-white/70 text-xs">{turn.emotion}</span>
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-paper text-sm font-bold text-ink-mid">{CHAR_AVATAR[turn.characterId]}</span>
+                          <span className="font-bold text-base">{turn.characterName}</span>
+                          <span className="chip text-xs">{turn.emotion}</span>
                           {turn.ragEpisodes.map((ep) => (
-                            <span key={ep} className="chip bg-white/50 text-xs font-mono">📚 {ep}</span>
+                            <span key={ep} className="chip text-xs font-mono">{ep}</span>
                           ))}
                         </div>
-                        <p className={`text-base leading-relaxed ${turn.isAction ? "italic text-stone-600" : "text-stone-800"}`}>
+                        <p className={`text-base leading-relaxed font-serif ${turn.isAction ? "italic text-ink-mid" : "text-ink"}`}>
                           {turn.isAction ? `[${turn.statement}]` : `"${turn.statement}"`}
                         </p>
                         {turn.internalThought && (
                           <div className="mt-2">
                             <button
-                              className="text-xs text-stone-400 underline hover:text-stone-600"
+                              className="text-xs text-ink-faint underline hover:text-ink-mid"
                               onClick={() => setExpandedThought(isThoughtOpen ? null : `${i}`)}
                             >
                               {isThoughtOpen ? "▲ 속마음 닫기" : "▼ 속마음 보기"}
                             </button>
                             {isThoughtOpen && (
-                              <div className="fade-up mt-1.5 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-sm italic text-stone-600">
+                              <div className="fade-up mt-1.5 rounded-sm border border-line bg-paper px-3 py-2 text-sm italic font-serif text-ink-mid">
                                 (속으로) {turn.internalThought}
                               </div>
                             )}
@@ -474,20 +476,20 @@ export default function PlotRoom() {
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}
-                          className="pulse-dot h-2 w-2 rounded-full bg-amber-400"
+                          className="pulse-dot h-2 w-2 rounded-full bg-ink-soft"
                           style={{ animationDelay: `${i * 0.2}s` }}
                         />
                       ))}
-                      <span className="text-sm text-stone-400">다음 발언 준비 중…</span>
+                      <span className="text-sm text-ink-faint">다음 발언 준비 중…</span>
                     </div>
                   )}
 
                   {meetingComplete && keywordSummary && (
-                    <div className="fade-up rounded-2xl border border-violet-200 bg-violet-50 p-4">
-                      <div className="mb-1 text-sm font-bold text-violet-700">
+                    <div className="fade-up rounded-sm border border-line bg-paper-2 p-4">
+                      <div className="mb-1 text-sm font-bold text-ink">
                         회의 요약 — 키워드
                       </div>
-                      <p className="mb-2 text-xs text-violet-700/80">
+                      <p className="mb-2 text-xs text-ink-mid">
                         {new Set(currentTurns.map((t) => t.characterId)).size}명의 캐릭터가{" "}
                         {currentTurns.length}번 반응한 결과에서 뽑은 방향 키워드입니다.
                       </p>
@@ -495,30 +497,30 @@ export default function PlotRoom() {
                         {keywordSummary.keywords.map((k) => (
                           <span
                             key={k}
-                            className="chip bg-white text-violet-800 border border-violet-200 text-sm font-semibold"
+                            className="chip text-sm font-semibold"
                           >
                             #{k}
                           </span>
                         ))}
                       </div>
-                      <div className="mb-1 text-sm font-bold text-violet-700">관계별 관찰</div>
+                      <div className="mb-1 text-sm font-bold text-ink">관계별 관찰</div>
                       <ul className="space-y-1.5">
                         {keywordSummary.relationInsights.map((r, i) => (
                           <li
                             key={i}
-                            className="rounded-xl border border-violet-100 bg-white/70 px-3 py-2 text-sm text-stone-700"
+                            className="rounded-sm border border-line bg-paper px-3 py-2 text-sm text-ink-mid"
                           >
-                            <span className="font-bold text-violet-700">{r.relation}</span>
-                            <span className="text-stone-400"> — </span>
+                            <span className="font-bold text-ink">{r.relation}</span>
+                            <span className="text-ink-faint"> — </span>
                             {r.note}
                           </li>
                         ))}
                       </ul>
                       <button
-                        className="btn mt-3 bg-violet-600 text-white hover:bg-violet-700 text-sm"
+                        className="btn-primary mt-3 text-sm"
                         onClick={() => setTab("recommend")}
                       >
-                        💡 관계별 시나리오 추천 보기
+                        관계별 시나리오 추천 보기
                       </button>
                     </div>
                   )}
@@ -536,53 +538,53 @@ export default function PlotRoom() {
         <div className="fade-up grid gap-4 lg:grid-cols-2">
           {/* 기존 프로젝트 설정에서 불러온 가드레일 */}
           <div className="space-y-3">
-            <h3 className="text-base font-bold text-stone-700">Story Bible에서 불러온 가드레일</h3>
+            <h3 className="text-base font-bold text-ink">Story Bible에서 불러온 가드레일</h3>
             <div className="card p-5 space-y-4">
               <div>
-                <div className="label text-emerald-700">세계관 규칙 (캐논)</div>
+                <div className="label text-ink">세계관 규칙 (캐논)</div>
                 <ul className="space-y-2">
                   {state.project.canonRules.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-900">
-                      <span className="shrink-0 text-emerald-500 font-bold">✓</span>{r}
+                    <li key={i} className="flex items-start gap-2 rounded-sm bg-paper-2 border border-line px-3 py-2 text-sm text-ink-mid">
+                      <span className="shrink-0 text-ink-mid font-bold">✓</span>{r}
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <div className="label text-blue-700">메인 플롯 방향 (생성 제약)</div>
+                <div className="label text-ink">메인 플롯 방향 (생성 제약)</div>
                 <ul className="space-y-2">
                   {state.project.generationConstraints.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2 text-sm text-blue-900">
-                      <span className="shrink-0 text-blue-500 font-bold">→</span>{r}
+                    <li key={i} className="flex items-start gap-2 rounded-sm bg-paper-2 border border-line px-3 py-2 text-sm text-ink-mid">
+                      <span className="shrink-0 text-ink-mid font-bold">→</span>{r}
                     </li>
                   ))}
                 </ul>
               </div>
               <div>
-                <div className="label text-red-700">금지 전개</div>
+                <div className="label text-signal">금지 전개</div>
                 <ul className="space-y-2">
                   {state.project.forbiddenSettings.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-900">
-                      <span className="shrink-0 text-red-500 font-bold">✕</span>{r}
+                    <li key={i} className="flex items-start gap-2 rounded-sm bg-signal-bg border border-signal px-3 py-2 text-sm text-signal">
+                      <span className="shrink-0 text-signal font-bold">✕</span>{r}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
-            <p className="text-xs text-stone-400">작품 설정 페이지에서 수정할 수 있습니다.</p>
+            <p className="text-xs text-ink-faint">작품 설정 페이지에서 수정할 수 있습니다.</p>
           </div>
 
           {/* 회의용 추가 가드레일 */}
           <div className="space-y-3">
-            <h3 className="text-base font-bold text-stone-700">이번 회의 전용 가드레일</h3>
+            <h3 className="text-base font-bold text-ink">이번 회의 전용 가드레일</h3>
             <div className="card p-5 space-y-4">
-              <p className="text-sm text-stone-500">
+              <p className="text-sm leading-relaxed text-ink-soft">
                 이번 회의에서만 적용할 추가 제약을 입력하세요. 에이전트가 발언 생성 시 이를 참조합니다.
               </p>
               <div className="flex gap-2">
                 <input
                   className="input flex-1"
-                  placeholder="예: 놀부의 반성 장면은 이번 회의에 넣지 않는다"
+                  placeholder="예: 윤가람의 전생 기억 회수 장면은 이번 회의에 넣지 않는다"
                   value={guardrailInput}
                   onChange={(e) => setGuardrailInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addGuardrail()}
@@ -592,16 +594,16 @@ export default function PlotRoom() {
                 </button>
               </div>
               {customGuardrails.length === 0 ? (
-                <div className="rounded-xl border-2 border-dashed border-paper-300 p-6 text-center text-sm text-stone-400">
+                <div className="rounded-sm border border-dashed border-line p-6 text-center text-sm text-ink-faint">
                   추가된 가드레일이 없습니다
                 </div>
               ) : (
                 <ul className="space-y-2">
                   {customGuardrails.map((g, i) => (
-                    <li key={i} className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                      <span className="flex-1">⚑ {g}</span>
+                    <li key={i} className="flex items-center gap-2 rounded-sm border border-line bg-paper-2 px-3 py-2 text-sm text-ink-mid">
+                      <span className="flex-1">{g}</span>
                       <button
-                        className="text-xs text-stone-400 hover:text-red-500"
+                        className="text-xs text-ink-faint hover:text-signal"
                         onClick={() => setCustomGuardrails((prev) => prev.filter((_, j) => j !== i))}
                       >
                         삭제
@@ -611,12 +613,12 @@ export default function PlotRoom() {
                 </ul>
               )}
 
-              <div className="rounded-xl bg-paper-100 p-4 text-sm text-stone-500 leading-relaxed">
-                <strong className="text-stone-700">유지해야 하는 관계 (기본값)</strong>
+              <div className="rounded-sm bg-paper-2 p-4 text-sm leading-relaxed text-ink-soft">
+                <strong className="text-ink">유지해야 하는 관계 (기본값)</strong>
                 <ul className="mt-2 space-y-1">
-                  <li>· 흥부–놀부: 결말 전까지 화해하지 않음</li>
-                  <li>· 제비–흥부: 은인 관계 유지 (역할 전환 금지)</li>
-                  <li>· 흥부아내–흥부: 신뢰 관계 유지</li>
+                  <li>· 도현–윤가람: 결말 전까지 정체를 밝히지 않음 (전생 동료 → 현생 라이벌)</li>
+                  <li>· 에르그–도현: 회귀의 근원 관계 유지 (이유는 후반부까지 아낌)</li>
+                  <li>· 채린–도현: 소꿉친구 신뢰 유지 (빙의로 서먹해도 초면 아님)</li>
                 </ul>
               </div>
             </div>
@@ -629,19 +631,19 @@ export default function PlotRoom() {
         <div className="fade-up space-y-4">
           {!meetingComplete && phase !== "done" && (
             <div className="card flex flex-col items-center gap-3 p-10 text-center">
-              <span className="text-5xl">💡</span>
-              <p className="text-base text-stone-500">
+              <Icon name="idea" size={40} className="text-ink-faint" />
+              <p className="text-base leading-relaxed text-ink-soft">
                 먼저 캐릭터 회의를 완료하면 관계별 시나리오 추천이 나옵니다.
               </p>
               <button className="btn-primary" onClick={() => setTab("meeting")}>
-                🗣️ 캐릭터 회의 시작하기
+                캐릭터 회의 시작하기
               </button>
             </div>
           )}
 
           {(meetingComplete || phase === "done") && (
             <>
-              <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm leading-relaxed text-violet-900">
+              <div className="rounded-sm border border-line bg-paper-2 p-3 text-sm leading-relaxed text-ink-mid">
                 회의 키워드를 바탕으로 <b>인물 관계별</b> 시나리오 방향을 추천합니다. 키워드·방향·원작
                 훼손 위험도까지만 제시하며, <b>완성된 글은 작가가 직접 씁니다.</b> 마음에 드는 방향은
                 메모로 저장해 두세요.
@@ -654,8 +656,8 @@ export default function PlotRoom() {
                     <div key={c.id} className="card overflow-hidden">
                       <div className="p-5">
                         <div className="mb-2 flex items-start justify-between gap-2">
-                          <span className="chip bg-violet-100 text-violet-800 text-xs font-bold">
-                            🔗 {c.relationLabel}
+                          <span className="chip bg-paper-2 text-ink-mid text-xs font-bold">
+                            {c.relationLabel}
                           </span>
                           <span className={`chip border text-xs font-bold ${RISK_COLOR[c.riskLevel]}`}>
                             {RISK_ICON[c.riskLevel]} 원작 훼손 {c.riskLevel}
@@ -664,39 +666,39 @@ export default function PlotRoom() {
                         <div className="mb-2">
                           <span className={`chip ${SUBSTORY_TYPE_COLOR[c.type]} text-xs`}>{c.type}</span>
                         </div>
-                        <h4 className="text-lg font-extrabold text-stone-800">{c.title}</h4>
+                        <h4 className="text-lg font-bold text-ink">{c.title}</h4>
 
                         {/* 키워드 위주 */}
                         <div className="mt-2 flex flex-wrap gap-1">
                           {c.keywords.map((k) => (
                             <span
                               key={k}
-                              className="chip border border-amber-200 bg-amber-50 text-amber-800 text-xs font-semibold"
+                              className="chip border border-line bg-paper-2 text-ink-mid text-xs font-semibold"
                             >
                               #{k}
                             </span>
                           ))}
                         </div>
 
-                        <p className="mt-2 text-sm leading-relaxed text-stone-600">{c.summary}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-ink-mid">{c.summary}</p>
 
                         <div className="mt-3 flex flex-wrap gap-1">
                           {c.relatedCharacterIds.map((id) => {
                             const b = state.blocks.find((x) => x.id === id);
                             return b ? (
-                              <span key={id} className="chip bg-paper-100 text-stone-500 text-xs">
+                              <span key={id} className="chip text-xs">
                                 {CHAR_AVATAR[id]} {b.name}
                               </span>
                             ) : null;
                           })}
                           {c.relatedEpisodes.map((ep) => (
-                            <span key={ep} className="chip bg-paper-100 text-stone-500 text-xs font-mono">{ep}</span>
+                            <span key={ep} className="chip text-xs font-mono">{ep}</span>
                           ))}
                         </div>
 
                         <div className="mt-3 flex items-center justify-between gap-2">
                           <button
-                            className="text-xs text-stone-400 underline hover:text-stone-600"
+                            className="text-xs text-ink-faint underline hover:text-ink-mid"
                             onClick={() => setExpandedCandidate(isOpen ? null : c.id)}
                           >
                             {isOpen ? "▲ 닫기" : "▼ 참고 장면 · 위험 근거 보기"}
@@ -704,26 +706,26 @@ export default function PlotRoom() {
                           <button
                             className={`btn px-3 py-1.5 text-xs ${
                               saved
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-600 text-white hover:bg-amber-700"
+                                ? "border border-line bg-paper-2 text-ink-mid"
+                                : "border border-ink bg-ink text-paper hover:bg-black"
                             }`}
                             onClick={() => saveRecAsNote(c)}
                             disabled={saved}
                           >
-                            {saved ? "✓ 메모로 저장됨" : "📝 메모로 저장"}
+                            {saved ? "✓ 메모로 저장됨" : "메모로 저장"}
                           </button>
                         </div>
                       </div>
 
                       {isOpen && (
-                        <div className="fade-up border-t border-paper-300 space-y-3 p-5">
+                        <div className="fade-up border-t border-line space-y-3 p-5">
                           <div>
                             <div className="label">참고 장면 방향</div>
-                            <p className="text-sm leading-relaxed text-stone-700 rounded-xl bg-paper-100 px-3 py-2.5">
+                            <p className="text-sm leading-relaxed text-ink-mid rounded-sm bg-paper-2 px-3 py-2.5">
                               {c.keyMoment}
                             </p>
                           </div>
-                          <div className={`rounded-xl border p-3 ${RISK_COLOR[c.riskLevel]}`}>
+                          <div className={`rounded-sm border p-3 ${RISK_COLOR[c.riskLevel]}`}>
                             <div className="mb-1 text-xs font-bold">
                               {RISK_ICON[c.riskLevel]} 원작 훼손 위험도 {c.riskLevel} — 근거
                             </div>

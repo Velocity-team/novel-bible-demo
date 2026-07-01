@@ -66,11 +66,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf6ef] text-stone-800">
+    <div className="min-h-screen bg-paper text-ink">
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} onExit={exitToLanding} />
       <div className="lg:pl-72">
         <Header onMenuClick={() => setMobileOpen(true)} />
-        <main className="mx-auto max-w-7xl p-4 lg:p-6">
+        <main className="mx-auto max-w-6xl p-4 lg:p-6">
           {page === "dashboard" && <Dashboard />}
           {(page === "import" || page === "writing") && <ManuscriptImport />}
           {page === "memory" && <AIMemory />}

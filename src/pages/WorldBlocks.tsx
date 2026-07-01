@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BlockCard from "../components/BlockCard";
 import { BLOCK_TYPE_META } from "../components/meta";
+import { Icon } from "../components/Icon";
 import Modal from "../components/Modal";
 import { useApp } from "../context/AppContext";
 import type { BlockType } from "../types";
@@ -87,16 +88,16 @@ export default function WorldBlocks() {
   return (
     <div className="fade-up space-y-5">
       {/* 설정 카드 / 관계 만들기 전환 */}
-      <div className="flex gap-1 rounded-2xl border border-paper-300 bg-paper-100 p-1.5">
+      <div className="flex gap-1 rounded-sm border border-line bg-paper-2 p-1.5">
         {([
-          ["cards", "🗂️ 설정 카드"],
-          ["relations", "🔗 관계 만들기"],
+          ["cards", "설정 카드"],
+          ["relations", "관계 만들기"],
         ] as const).map(([k, label]) => (
           <button
             key={k}
             onClick={() => setTab(k)}
-            className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition ${
-              tab === k ? "bg-white text-stone-800 shadow-card" : "text-stone-500 hover:text-stone-700"
+            className={`flex-1 rounded-sm px-3 py-2 text-sm font-semibold transition ${
+              tab === k ? "bg-paper text-ink" : "text-ink-soft hover:text-ink"
             }`}
           >
             {label}
@@ -110,8 +111,8 @@ export default function WorldBlocks() {
       <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-stone-800">설정 사전</h2>
-          <p className="text-base text-stone-500">
+          <h2 className="text-2xl font-bold tracking-tight text-ink">설정 사전</h2>
+          <p className="text-base leading-relaxed text-ink-soft">
             작품의 인물·장소·사건·규칙이 카드로 정리되어 있어요. 카드를 누르면 자세히 볼 수 있습니다.
           </p>
         </div>
@@ -127,13 +128,16 @@ export default function WorldBlocks() {
             <button
               key={f.key}
               onClick={() => setTypeFilter(f.key)}
-              className={`chip cursor-pointer px-4 py-2 text-base transition ${
+              className={`chip inline-flex cursor-pointer items-center gap-1 px-4 py-2 text-base transition ${
                 typeFilter === f.key
-                  ? "bg-amber-600 text-white"
-                  : "border border-paper-300 bg-white text-stone-600 hover:bg-paper-100"
+                  ? "border-ink bg-ink text-paper"
+                  : "text-ink-mid hover:bg-paper-2"
               }`}
             >
-              {f.key !== "all" && BLOCK_TYPE_META[f.key].icon} {f.label}
+              {f.key !== "all" && (
+                <Icon name={BLOCK_TYPE_META[f.key].icon} size={14} className="shrink-0" />
+              )}
+              {f.label}
             </button>
           ))}
         </div>
@@ -171,7 +175,7 @@ export default function WorldBlocks() {
         ))}
       </div>
       {filtered.length === 0 && (
-        <div className="card p-10 text-center text-base text-stone-500">
+        <div className="card p-10 text-center text-base text-ink-soft">
           조건에 맞는 설정 카드가 없습니다.
         </div>
       )}
@@ -188,7 +192,7 @@ export default function WorldBlocks() {
             >
               {Object.entries(BLOCK_TYPE_META).map(([k, v]) => (
                 <option key={k} value={k}>
-                  {v.icon} {v.label}
+                  {v.label}
                 </option>
               ))}
             </select>

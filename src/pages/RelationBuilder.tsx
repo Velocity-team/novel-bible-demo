@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BLOCK_TYPE_META } from "../components/meta";
+import { Icon } from "../components/Icon";
 import { useApp } from "../context/AppContext";
 import { RELATION_TYPES } from "../data/mockData";
 import { relationSentence } from "../utils/korean";
@@ -45,14 +45,13 @@ export default function RelationBuilder() {
     setTimeout(() => setAdded(false), 1500);
   };
 
-  const blockOption = (b: (typeof state.blocks)[number]) =>
-    `${BLOCK_TYPE_META[b.type].icon} ${b.name}`;
+  const blockOption = (b: (typeof state.blocks)[number]) => b.name;
 
   return (
     <div className="fade-up space-y-5">
       <div>
-        <h2 className="text-2xl font-extrabold text-stone-800">관계 만들기</h2>
-        <p className="text-base text-stone-500">
+        <h2 className="text-3xl font-bold tracking-tight text-ink">관계 만들기</h2>
+        <p className="mt-1 max-w-2xl text-base leading-relaxed text-ink-soft">
           [누가] + [어떤 관계] + [누구와] 순서로 고르면 설정 관계가 만들어지고, 설정
           지도에 바로 표시됩니다.
         </p>
@@ -61,8 +60,8 @@ export default function RelationBuilder() {
       {/* 관계 만들기 */}
       <section className="card p-6">
         <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
-          <div className="rounded-2xl border-2 border-violet-300 bg-violet-50 p-4">
-            <label className="label text-violet-700">① 누가</label>
+          <div className="rounded-sm border border-line bg-paper-2 p-4">
+            <label className="label text-ink">① 누가</label>
             <select
               className="input"
               value={sourceId}
@@ -77,8 +76,8 @@ export default function RelationBuilder() {
             </select>
           </div>
 
-          <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4">
-            <label className="label text-emerald-700">② 어떤 관계</label>
+          <div className="rounded-sm border border-line bg-paper-2 p-4">
+            <label className="label text-ink">② 어떤 관계</label>
             <select
               className="input mb-2"
               value={relType}
@@ -101,8 +100,8 @@ export default function RelationBuilder() {
             />
           </div>
 
-          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
-            <label className="label text-amber-700">③ 누구와</label>
+          <div className="rounded-sm border border-line bg-paper-2 p-4">
+            <label className="label text-ink">③ 누구와</label>
             <select
               className="input"
               value={targetId}
@@ -131,9 +130,9 @@ export default function RelationBuilder() {
         </div>
 
         {/* 문장 미리보기 */}
-        <div className="mt-4 rounded-xl border border-paper-300 bg-paper-100 p-4">
-          <span className="mr-2 text-sm font-bold text-stone-500">미리보기</span>
-          <span className={`text-lg ${source && target ? "text-stone-800" : "text-stone-400"}`}>
+        <div className="mt-4 rounded-sm border border-line bg-paper-2 p-4">
+          <span className="mr-2 text-sm font-bold text-ink-soft">미리보기</span>
+          <span className={`text-lg ${source && target ? "text-ink" : "text-ink-faint"}`}>
             {preview}
           </span>
         </div>
@@ -142,7 +141,7 @@ export default function RelationBuilder() {
       {/* 관계 목록 */}
       <section className="card p-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-lg font-bold text-stone-800">
+          <h3 className="text-lg font-bold text-ink">
             만들어진 관계 ({state.relations.length})
           </h3>
           <input
@@ -156,27 +155,28 @@ export default function RelationBuilder() {
           {filteredRelations.map((r) => (
             <li
               key={r.id}
-              className="group flex items-center justify-between gap-2 rounded-xl border border-paper-300 bg-paper-100 px-4 py-3"
+              className="group flex items-center justify-between gap-2 rounded-sm border border-line bg-paper-2 px-4 py-3"
             >
               <div className="min-w-0">
-                <div className="truncate text-base font-semibold text-stone-700">
+                <div className="truncate text-base font-semibold text-ink">
                   {relationLabel(state, r)}
                 </div>
-                <div className="truncate text-sm text-stone-500">
+                <div className="truncate text-sm text-ink-soft">
                   {relationNatural(state, r)}
                 </div>
               </div>
               <button
-                className="shrink-0 rounded-md p-1.5 text-stone-400 opacity-0 transition hover:bg-red-100 hover:text-red-600 group-hover:opacity-100"
+                className="shrink-0 rounded-sm p-1.5 text-ink-faint opacity-0 transition hover:bg-signal-bg hover:text-signal group-hover:opacity-100"
                 onClick={() => deleteRelation(r.id)}
                 title="관계 삭제"
+                aria-label="관계 삭제"
               >
-                🗑️
+                <Icon name="delete" size={16} />
               </button>
             </li>
           ))}
           {filteredRelations.length === 0 && (
-            <li className="text-base text-stone-500">찾은 관계가 없습니다.</li>
+            <li className="text-base text-ink-soft">찾은 관계가 없습니다.</li>
           )}
         </ul>
       </section>

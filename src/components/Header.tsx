@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { Icon } from "./Icon";
 
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const { state, navigate, resetAll } = useApp();
@@ -23,31 +24,31 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-paper-300 bg-white/90 px-4 py-3 backdrop-blur lg:px-6">
+    <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-paper px-4 py-3 lg:px-6">
       <button
-        className="rounded-lg p-2 text-stone-600 hover:bg-paper-100 lg:hidden"
+        className="rounded-sm p-2 text-ink-soft hover:bg-paper-2 lg:hidden"
         onClick={onMenuClick}
         aria-label="메뉴 열기"
       >
-        ☰
+        <Icon name="menu" size={20} />
       </button>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h1 className="truncate text-lg font-bold text-stone-800 sm:text-xl">
+          <h1 className="truncate text-lg font-bold text-ink sm:text-xl">
             {state.project.title}
           </h1>
           {openConflicts === 0 ? (
-            <span className="chip hidden bg-emerald-100 text-emerald-800 sm:inline-flex">
+            <span className="chip hidden border border-line bg-paper-2 text-ink-mid sm:inline-flex">
               ● 설정 오류 없음
             </span>
           ) : (
-            <span className="chip hidden bg-red-100 text-red-700 sm:inline-flex">
+            <span className="chip hidden border border-signal bg-signal-bg text-signal sm:inline-flex">
               설정 오류 {openConflicts}건
             </span>
           )}
         </div>
-        <div className="hidden text-sm text-stone-500 sm:block">{state.project.genre}</div>
+        <div className="hidden text-sm text-ink-soft sm:block">{state.project.genre}</div>
       </div>
 
       <div className="hidden items-center md:flex">
@@ -61,26 +62,26 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
       </div>
 
       <button
-        className="btn-ghost whitespace-nowrap"
+        className="btn-ghost inline-flex items-center gap-1.5 whitespace-nowrap"
         onClick={() => navigate("about")}
         title="노벨 바이블이 어떤 서비스인지 알아보기"
       >
-        <span className="hidden lg:inline">💡 서비스 소개</span>
-        <span className="lg:hidden">💡</span>
+        <Icon name="about" size={16} />
+        <span className="hidden lg:inline">서비스 소개</span>
       </button>
 
       <button
-        className="btn-ghost whitespace-nowrap"
+        className="btn-ghost inline-flex items-center gap-1.5 whitespace-nowrap"
         onClick={startNewProject}
         title="새 작품을 등록하고 처음부터 시작하기"
       >
-        <span className="hidden lg:inline">✚ 새 작품 등록</span>
-        <span className="lg:hidden">✚</span>
+        <Icon name="add" size={16} />
+        <span className="hidden lg:inline">새 작품 등록</span>
       </button>
 
-      <button className="btn-primary whitespace-nowrap" onClick={() => navigate("import")}>
-        <span className="hidden sm:inline">📥 새 원고 올리기</span>
-        <span className="sm:hidden">📥</span>
+      <button className="btn-primary inline-flex items-center gap-1.5 whitespace-nowrap" onClick={() => navigate("import")}>
+        <Icon name="import" size={16} />
+        <span className="hidden sm:inline">새 원고 올리기</span>
       </button>
     </header>
   );

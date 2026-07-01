@@ -1,8 +1,10 @@
+import { Icon } from "./Icon";
+
 export default function StatCard({
   label,
   value,
   icon,
-  accent = "text-amber-700",
+  accent = "text-ink",
   onClick,
 }: {
   label: string;
@@ -15,14 +17,12 @@ export default function StatCard({
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="card flex w-full items-center gap-3 p-4 text-left transition enabled:hover:shadow-card-hover"
+      className="flex w-full flex-col items-start gap-1 p-4 text-left transition enabled:hover:bg-paper-2 disabled:cursor-default"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-paper-100 text-2xl">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className={`text-2xl font-extrabold leading-tight ${accent}`}>{value}</div>
-        <div className="truncate text-sm text-stone-500">{label}</div>
+      <div className={`text-3xl font-bold leading-none tracking-tight ${accent}`}>{value}</div>
+      <div className="flex items-center gap-1.5 text-ink-soft">
+        <Icon name={icon} size={13} className="shrink-0 text-ink-faint" />
+        <span className="truncate text-sm">{label}</span>
       </div>
     </button>
   );

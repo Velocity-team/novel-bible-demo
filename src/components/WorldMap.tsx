@@ -2,16 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { AIStatusBadge, SeverityBadge, TypeBadge } from "./Badge";
 import GraphCanvas, { type GraphMode } from "./GraphCanvas";
 import { BLOCK_TYPE_META } from "./meta";
+import { Icon } from "./Icon";
 import { useApp } from "../context/AppContext";
 import type { BlockType } from "../types";
 import { aiRecall } from "../utils/aiSim";
 import { relationNatural } from "../utils/search";
 
 const MODES: { key: GraphMode; label: string; hint: string }[] = [
-  { key: "memory", label: "🧠 전체 보기", hint: "저장된 모든 설정 카드와 관계를 보여줍니다." },
-  { key: "focus", label: "🎯 인물 중심 보기", hint: "고른 인물과 바로 연결된 카드만 또렷하게 보여줍니다." },
-  { key: "conflict", label: "🚨 오류 위험 보기", hint: "설정 오류와 얽힌 카드를 빨간색으로 표시합니다." },
-  { key: "scenario", label: "✨ 추천 시나리오 보기", hint: "최근 저장한 ‘관계별 시나리오 추천 메모’에 묶인 카드를 표시합니다." },
+  { key: "memory", label: "전체 보기", hint: "저장된 모든 설정 카드와 관계를 보여줍니다." },
+  { key: "focus", label: "인물 중심 보기", hint: "고른 인물과 바로 연결된 카드만 또렷하게 보여줍니다." },
+  { key: "conflict", label: "오류 위험 보기", hint: "설정 오류와 얽힌 카드를 빨간색으로 표시합니다." },
+  { key: "scenario", label: "추천 시나리오 보기", hint: "최근 저장한 ‘관계별 시나리오 추천 메모’에 묶인 카드를 표시합니다." },
 ];
 
 const TYPE_FILTERS: { key: BlockType | "all"; label: string }[] = [
@@ -76,8 +77,8 @@ export default function WorldMap() {
     <section className="card space-y-4 p-5 lg:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-stone-800">🗺️ 설정 지도</h2>
-          <p className="text-base text-stone-500">
+          <h2 className="text-2xl font-bold tracking-tight text-ink">설정 지도</h2>
+          <p className="text-base text-ink-soft">
             인물·장소·사건이 어떻게 이어져 있는지 한눈에 봅니다. 동그라미를 끌어 옮기고,
             휠로 확대하고, 올려놓으면 이어진 카드가 빛나요.
           </p>
@@ -99,8 +100,8 @@ export default function WorldMap() {
               onClick={() => setMode(m.key)}
               className={`chip cursor-pointer px-4 py-2 text-base transition ${
                 mode === m.key
-                  ? "bg-amber-600 text-white"
-                  : "border border-paper-300 bg-white text-stone-600 hover:bg-paper-100"
+                  ? "border-ink bg-ink text-paper"
+                  : "text-ink-mid hover:bg-paper-2"
               }`}
               title={m.hint}
             >
@@ -128,15 +129,15 @@ export default function WorldMap() {
               onClick={() => setTypeFilter(f.key)}
               className={`chip cursor-pointer transition ${
                 typeFilter === f.key
-                  ? "bg-emerald-600 text-white"
-                  : "border border-paper-300 bg-white text-stone-500 hover:bg-paper-100"
+                  ? "border-ink bg-ink text-paper"
+                  : "text-ink-soft hover:bg-paper-2"
               }`}
             >
               {f.label}
             </button>
           ))}
         </div>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-ink-soft">
           {MODES.find((m) => m.key === mode)?.hint}
           {mode === "scenario" && !lastScenario && " (아직 저장한 추천 시나리오가 없습니다. ‘캐릭터 회의실 › 관계별 시나리오 추천’에서 방향을 받아 메모로 저장해 보세요.)"}
         </p>
@@ -169,10 +170,11 @@ export default function WorldMap() {
                   <TypeBadge type={selected.type} />
                   <AIStatusBadge status={selected.aiStatus} />
                 </div>
-                <h3 className="text-xl font-bold text-stone-800">
-                  {BLOCK_TYPE_META[selected.type].icon} {selected.name}
+                <h3 className="flex items-center gap-2 text-xl font-bold text-ink">
+                  <Icon name={BLOCK_TYPE_META[selected.type].icon} size={18} className="shrink-0 text-ink-soft" />
+                  {selected.name}
                 </h3>
-                <p className="mt-1 text-base leading-relaxed text-stone-500">
+                <p className="mt-1 text-base leading-relaxed text-ink-soft">
                   {selected.description}
                 </p>
               </div>
@@ -181,7 +183,7 @@ export default function WorldMap() {
                 <h4 className="label">이어진 관계 ({selectedRelations.length})</h4>
                 <ul className="space-y-1">
                   {selectedRelations.map((r) => (
-                    <li key={r.id} className="rounded-lg bg-paper-100 px-3 py-2 text-sm text-stone-600">
+                    <li key={r.id} className="rounded-sm bg-paper-2 px-3 py-2 text-sm text-ink-soft">
                       {relationNatural(state, r)}
                     </li>
                   ))}
@@ -195,7 +197,7 @@ export default function WorldMap() {
                     {selectedConflicts.map((c) => (
                       <li
                         key={c.id}
-                        className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm"
+                        className="flex items-center justify-between rounded-sm border border-signal bg-signal-bg px-3 py-2 text-sm"
                       >
                         <span>{c.title}</span>
                         <SeverityBadge severity={c.severity} />
@@ -206,13 +208,13 @@ export default function WorldMap() {
               )}
 
               <button
-                className="btn-green w-full"
+                className="btn-primary w-full"
                 onClick={() => setRecall(aiRecall(selected.id, state))}
               >
-                🧠 AI가 기억하는 내용 보기
+                AI가 기억하는 내용 보기
               </button>
               {recall && (
-                <div className="fade-up rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-base leading-relaxed text-emerald-900">
+                <div className="fade-up rounded-sm border border-line bg-paper-2 p-3 text-base leading-relaxed text-ink-mid">
                   {recall}
                 </div>
               )}
@@ -222,8 +224,8 @@ export default function WorldMap() {
               </button>
             </div>
           ) : (
-            <div className="flex h-full min-h-60 flex-col items-center justify-center text-center text-base text-stone-500">
-              <div className="mb-2 text-4xl">🗺️</div>
+            <div className="flex h-full min-h-60 flex-col items-center justify-center text-center text-base text-ink-soft">
+              <Icon name="map" size={32} className="mb-2 text-ink-faint" />
               지도의 동그라미를 누르면
               <br />
               설명, 관계, 오류를

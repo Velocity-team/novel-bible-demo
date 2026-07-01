@@ -1,35 +1,35 @@
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useApp } from "../context/AppContext";
-import type { Tile, WorldDate } from "../types";
+import type { CharacterPlacement, Tile, WorldBlock, WorldDate } from "../types";
 
-const CELL = 26;
-
-/** 타일별 배경색 + 위에 얹는 장식(프롭) */
-const TILE_STYLE: Record<Tile, { bg: string; prop?: string }> = {
-  void: { bg: "transparent" },
-  grass: { bg: "#b6d29a" },
-  soil: { bg: "#d8c39a" },
-  path: { bg: "#e3d2ab" },
-  floor: { bg: "#ece0c8" },
-  wall: { bg: "#b59875" },
-  water: { bg: "#a7d3e6" },
-  sand: { bg: "#ecdcab" },
-  tree: { bg: "#9cc07e", prop: "🌳" },
-  rice: { bg: "#dcc987", prop: "🌾" },
-  gourd: { bg: "#cfe0a6", prop: "gourd" },
-  pot: { bg: "#cdb89a", prop: "🏺" },
+/**
+ * 인물 모노그램 — 색이 아니라 형태(의식=● 채운 원 / 몸=○ 윤곽 링) + 이니셜로 이중부호.
+ * c1~c5는 기존 표기(도·윤·문·채·에)를 유지하고, 나머지는 이름 첫 글자를 쓴다.
+ */
+const CHAR_MONO: Record<string, string> = {
+  c1: "도",
+  c2: "윤",
+  c3: "문",
+  c4: "채",
+  c5: "에",
 };
 
-/** 캐릭터 토큰 표현 (2D 스프라이트 대용) */
-const CHAR_TOKEN: Record<string, { icon: string; ring: string; bg: string }> = {
-  c1: { icon: "🙂", ring: "#d9a441", bg: "#fbf2dc" },
-  c2: { icon: "😤", ring: "#8a7a64", bg: "#efe9df" },
-  c3: { icon: "👩", ring: "#5aa97f", bg: "#e4f3ea" },
-  c4: { icon: "👩‍🦰", ring: "#d9745f", bg: "#fbe7e3" },
-  c5: { icon: "🐦", ring: "#5ba9cf", bg: "#e2f1f8" },
-};
+function monogram(id: string, name?: string): string {
+  return CHAR_MONO[id] ?? name?.trim()?.[0] ?? "?";
+}
 
-const FALLBACK_TOKEN = { icon: "🧭", ring: "#8a7a64", bg: "#efe9df" };
+/**
+ * 의식(빙의 주체) 여부 — 데이터에서 파생한다. '의식' 속성(정체 ≠ 몸 바인딩)을 가진 인물만
+ * 채운 원(●)으로, 나머지는 윤곽 링(○)으로 그린다. 흑백에서도 형태로 구분된다.
+ */
+function isMind(block?: WorldBlock): boolean {
+  return !!block?.attributes?.["의식"];
+}
 
 function dateText(d?: WorldDate): string {
   if (!d) return "시간 미상";
@@ -47,10 +47,114 @@ function yearLabel(d?: WorldDate): string {
 }
 
 const ZONE_KIND_ICON: Record<string, string> = {
-  home: "🏠",
-  village: "🛤️",
-  faraway: "🌊",
+  home: "▣",
+  village: "◎",
+  faraway: "◈",
 };
+
+// ── 평면 도면 스키매틱: 타일 그리드를 구역 사각(도면)으로 파생 ──────────────
+// 도면 여백(%). paper-2 '바닥'이 구역 사각 둘레에 얇게 보이도록 안쪽으로 들인다.
+const MAP_INSET = 5;
+const pct = (frac: number) => MAP_INSET + frac * (100 - 2 * MAP_INSET);
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+type Rect = { x: number; y: number; w: number; h: number };
+
+/** 조건에 맞는 타일들의 바운딩 박스(격자 좌표)와 개수. 없으면 null. */
+function bboxOf(
+  grid: Tile[][],
+  match: (t: Tile) => boolean
+): { rect: Rect; count: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let count = 0;
+  grid.forEach((row, y) =>
+    row.forEach((t, x) => {
+      if (!match(t)) return;
+      count++;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    })
+  );
+  if (count === 0) return null;
+  return { rect: { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 }, count };
+}
+
+/** 도면 안에서 별도 구역으로 뽑을 특징 타일 (밀도가 높은 덩어리만 표기). */
+const PLAN_FEATURES: { key: Tile; label: string }[] = [
+  { key: "water", label: "수역 · 포탈" },
+  { key: "gourd", label: "균열" },
+];
+
+/** 격자 좌표 Rect → 도면(% 기준) CSS 위치/크기. */
+function rectStyle(r: Rect, width: number, height: number): CSSProperties {
+  const span = 100 - 2 * MAP_INSET;
+  return {
+    left: `${pct(r.x / width)}%`,
+    top: `${pct(r.y / height)}%`,
+    width: `${(r.w / width) * span}%`,
+    height: `${(r.h / height) * span}%`,
+  };
+}
+
+/** 마커 배치 — 인물이 한곳에 몰리면 겹치지 않게 서로 밀어낸다. */
+function laidOutMarkers(chars: CharacterPlacement[], width: number, height: number) {
+  const pts = chars.map((p) => ({ p, fx: (p.x + 0.5) / width, fy: (p.y + 0.5) / height }));
+  const MIN = 0.08; // 최소 간격(격자 비율)
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = 0; j < i; j++) {
+      let dx = pts[i].fx - pts[j].fx;
+      let dy = pts[i].fy - pts[j].fy;
+      let d = Math.hypot(dx, dy);
+      if (d < MIN) {
+        if (d < 1e-6) {
+          const a = i * 2.399; // 완전히 겹칠 때 방사형으로 분산
+          dx = Math.cos(a);
+          dy = Math.sin(a);
+          d = 1;
+        }
+        const push = (MIN - d) / 2;
+        pts[i].fx += (dx / d) * push;
+        pts[i].fy += (dy / d) * push;
+        pts[j].fx -= (dx / d) * push;
+        pts[j].fy -= (dy / d) * push;
+      }
+    }
+  }
+  return pts.map(({ p, fx, fy }) => ({
+    p,
+    left: `${pct(clamp01(fx))}%`,
+    top: `${pct(clamp01(fy))}%`,
+  }));
+}
+
+/** 정체성 형태 토큰: 의식=● 채운 원 / 몸=○ 윤곽 링. 색이 아닌 형태로 구분. */
+function CharGlyph({
+  mind,
+  size = 30,
+  children,
+}: {
+  mind: boolean;
+  size?: number;
+  children?: ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex flex-none items-center justify-center rounded-full font-bold leading-none ${
+        mind
+          ? "bg-ink text-paper"
+          : "border-2 border-ink-mid bg-transparent text-ink-mid"
+      }`}
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}
+    >
+      {children}
+    </span>
+  );
+}
 
 export default function WorldAtlas() {
   const { state, openBlockDetail } = useApp();
@@ -67,7 +171,7 @@ export default function WorldAtlas() {
 
   const episode = episodes.find((e) => e.id === episodeId) ?? lastEp;
 
-  // 이 회차의 배치 + 기본으로 보여줄 zone(주인공 흥부가 있는 곳 우선)
+  // 이 회차의 배치 + 기본으로 보여줄 zone(주인공 도현이 있는 곳 우선)
   const placementsThisEp = useMemo(
     () => state.placements.filter((p) => p.episodeId === episode?.id),
     [state.placements, episode?.id]
@@ -84,6 +188,28 @@ export default function WorldAtlas() {
   const stage = state.stages.find((s) => s.zoneId === zoneId);
 
   const charsInZone = placementsThisEp.filter((p) => p.zoneId === zoneId);
+
+  // 도면(구역 사각) 파생 — 타일 그리드에서 구조/특징 영역의 바운딩 박스를 뽑는다.
+  const plan = useMemo(() => {
+    if (!stage) return null;
+    const primary =
+      bboxOf(stage.grid, (t) => t !== "void")?.rect ??
+      ({ x: 0, y: 0, w: stage.width, h: stage.height } as Rect);
+    const features = PLAN_FEATURES.flatMap((f) => {
+      const b = bboxOf(stage.grid, (t) => t === f.key);
+      if (!b) return [];
+      const density = b.count / (b.rect.w * b.rect.h);
+      // 흩어진 특징(밀도 낮음)·너무 작은 덩어리는 도면 노이즈가 되므로 제외.
+      if (b.count < 4 || density < 0.5) return [];
+      return [{ label: f.label, rect: b.rect }];
+    });
+    return { primary, features };
+  }, [stage]);
+
+  const markers = useMemo(
+    () => (stage ? laidOutMarkers(charsInZone, stage.width, stage.height) : []),
+    [charsInZone, stage]
+  );
 
   // 작품 연도 드롭다운
   const years = useMemo(() => {
@@ -129,38 +255,36 @@ export default function WorldAtlas() {
   return (
     <div className="fade-up space-y-5">
       {/* 헤더 + 작품 속 시간 HUD */}
-      <section className="card relative overflow-hidden p-5 lg:p-6">
-        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-amber-300/30 blur-3xl" />
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
+      <section className="card p-5 lg:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-3xl">🗺️</span>
-              <h2 className="text-2xl font-extrabold text-stone-800">회차별 세계관 지도</h2>
-              <span className="chip bg-emerald-500 text-white">NEW</span>
-              <span className="chip bg-amber-100 text-amber-900">흥부와 놀부</span>
+              <h2 className="text-3xl font-bold tracking-tight text-ink">회차별 세계관 지도</h2>
+              <span className="chip bg-ink text-paper">NEW</span>
+              <span className="chip">두 번째 각성</span>
             </div>
-            <p className="mt-1 max-w-2xl text-base text-stone-500">
+            <p className="mt-1 max-w-2xl text-base leading-relaxed text-ink-soft">
               회차를 기준으로 그 시점에 누가 어느 곳에 있는지 2D 지도로 봅니다. 작품 연도·회차·인물을
               골라 가며 이야기의 동선을 한눈에 확인하세요.
             </p>
           </div>
 
           {/* 작품 속 시간 HUD */}
-          <div className="rounded-2xl border border-paper-300 bg-paper-100 px-5 py-3 text-right">
-            <div className="text-xs font-bold uppercase tracking-widest text-amber-600">
+          <div className="rounded-sm border border-line bg-paper-2 px-5 py-3 text-right">
+            <div className="text-xs font-bold uppercase tracking-wider text-ink-faint">
               작품 속 시간
             </div>
-            <div className="mt-0.5 text-2xl font-extrabold text-stone-800">
+            <div className="mt-0.5 text-2xl font-bold text-ink">
               {dateText(episode?.date)}
             </div>
-            <div className="text-sm text-stone-500">
+            <div className="text-sm text-ink-soft">
               {episode?.title} · {zone?.name ?? "-"}
             </div>
           </div>
         </div>
 
         {/* 드롭다운 3종: 작품 연도 / 회차 / 인물 */}
-        <div className="relative mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <label className="block">
             <span className="label">작품 연도</span>
             <select
@@ -195,7 +319,7 @@ export default function WorldAtlas() {
               <option value="">전체 보기</option>
               {charsThisEp.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {CHAR_TOKEN[c.id]?.icon ?? "🧭"} {c.name}
+                  {monogram(c.id, c.name)} {c.name}
                 </option>
               ))}
             </select>
@@ -217,189 +341,169 @@ export default function WorldAtlas() {
                   setZoneOverride(z.id);
                   setFocusCharId("");
                 }}
-                className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
+                className={`flex w-full items-center justify-between gap-2 rounded-sm border px-3 py-2 text-left text-sm transition ${
                   active
-                    ? "bg-amber-100 font-bold text-amber-900"
-                    : "text-stone-600 hover:bg-paper-100"
+                    ? "border-ink bg-paper font-bold text-ink"
+                    : "border-transparent text-ink-mid hover:bg-paper-2"
                 }`}
               >
                 <span className="flex items-center gap-2 truncate">
-                  <span className="text-xs">{ZONE_KIND_ICON[z.kind] ?? "📍"}</span>
+                  <span className="text-xs text-ink-faint">{ZONE_KIND_ICON[z.kind] ?? "·"}</span>
                   <span className="truncate">{z.name}</span>
                 </span>
-                {count > 0 && (
-                  <span className="chip bg-amber-600 text-white text-xs">{count}</span>
-                )}
+                <span className="font-mono text-xs text-ink-faint">{count}명</span>
               </button>
             );
           })}
-          <p className="px-1 pt-2 text-xs leading-relaxed text-stone-400">
+          <p className="px-1 pt-2 text-xs leading-relaxed text-ink-faint">
             숫자는 이 회차에 그 장소에 있는 인물 수입니다.
           </p>
         </aside>
 
-        {/* 우측: 2D 타일 지도 + 등장 인물 */}
+        {/* 우측: 평면 도면 + 등장 인물 */}
         <section className="space-y-4">
           <div className="card p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="text-lg font-bold text-stone-800">{zone?.name ?? "장소 없음"}</h3>
-                <p className="text-sm text-stone-500">{zone?.blurb}</p>
+                <h3 className="text-lg font-bold text-ink">{zone?.name ?? "장소 없음"}</h3>
+                <p className="text-sm text-ink-soft">{zone?.blurb}</p>
               </div>
-              <span className="chip bg-stone-100 text-stone-600">
-                👥 이 회차 등장 {charsInZone.length}명
+              <span className="chip">
+                이 회차 등장 {charsInZone.length}명
               </span>
             </div>
 
-            {/* 타일 맵 */}
-            <div className="overflow-x-auto">
-              {stage ? (
+            {/* 평면 도면 스키매틱 (paper-2 바닥 + paper 구역 사각 + 모노그램 마커) */}
+            {stage && plan ? (
+              <div
+                className="relative w-full rounded-sm border border-line bg-paper-2"
+                style={{ height: 264 }}
+              >
+                {/* 구역 사각 — 도면형: paper 채움 + 헤어라인 + 좌상단 구역명 */}
                 <div
-                  className="relative mx-auto rounded-xl border border-paper-300"
-                  style={{
-                    width: stage.width * CELL,
-                    height: stage.height * CELL,
-                    backgroundColor: "#f4ecdc",
-                  }}
+                  className="absolute rounded-sm border border-line bg-paper"
+                  style={rectStyle(plan.primary, stage.width, stage.height)}
                 >
-                  {/* 타일 */}
-                  {stage.grid.map((rowArr, y) =>
-                    rowArr.map((t, x) => {
-                      const ts = TILE_STYLE[t];
-                      return (
-                        <div
-                          key={`${x}-${y}`}
-                          className="absolute flex items-center justify-center"
-                          style={{
-                            left: x * CELL,
-                            top: y * CELL,
-                            width: CELL,
-                            height: CELL,
-                            backgroundColor: ts.bg,
-                            boxShadow:
-                              t === "void"
-                                ? undefined
-                                : "inset 0 0 0 1px rgba(120,90,40,0.08)",
-                            fontSize: 14,
-                            lineHeight: 1,
-                          }}
-                        >
-                          {ts.prop === "gourd" ? (
-                            <span
-                              style={{
-                                width: 13,
-                                height: 16,
-                                borderRadius: "50% 50% 48% 48%",
-                                background:
-                                  "radial-gradient(circle at 40% 30%, #d6e8a8 0%, #9cc466 60%, #6f9a44 100%)",
-                                boxShadow: "0 1px 2px rgba(0,0,0,0.15)",
-                              }}
-                            />
-                          ) : (
-                            ts.prop
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                  <span className="absolute left-2 top-1.5 text-xs text-ink-faint">
+                    {stage.name}
+                  </span>
+                </div>
 
-                  {/* 캐릭터 토큰 */}
-                  {charsInZone.map((p) => {
-                    const tok = CHAR_TOKEN[p.characterId] ?? FALLBACK_TOKEN;
-                    const b = state.blocks.find((bl) => bl.id === p.characterId);
-                    const active = hoverChar === p.characterId || focusCharId === p.characterId;
-                    return (
-                      <button
-                        key={p.characterId}
-                        className="absolute flex items-center justify-center rounded-full transition"
-                        style={{
-                          left: p.x * CELL + CELL / 2 - 14,
-                          top: p.y * CELL + CELL / 2 - 14,
-                          width: 28,
-                          height: 28,
-                          background: tok.bg,
-                          border: `2px solid ${tok.ring}`,
-                          boxShadow: active
-                            ? `0 0 0 3px ${tok.ring}55, 0 2px 8px rgba(0,0,0,0.25)`
-                            : "0 2px 5px rgba(0,0,0,0.2)",
-                          fontSize: 14,
-                          zIndex: active ? 30 : 20,
-                          transform: active ? "scale(1.18)" : "scale(1)",
-                        }}
-                        title={`${b?.name ?? p.characterId} — ${p.activity}`}
-                        onMouseEnter={() => setHoverChar(p.characterId)}
-                        onMouseLeave={() => setHoverChar(null)}
-                        onClick={() => openBlockDetail(p.characterId)}
+                {/* 특징 영역(수역/균열 등) — 윤곽 사각으로 도면 위에 표시 */}
+                {plan.features.map((f) => (
+                  <div
+                    key={f.label}
+                    className="absolute rounded-sm border border-line"
+                    style={rectStyle(f.rect, stage.width, stage.height)}
+                  >
+                    <span className="absolute left-2 top-1.5 text-xs text-ink-faint">
+                      {f.label}
+                    </span>
+                  </div>
+                ))}
+
+                {/* 빈 존 정직 상태 — 가짜 마커를 그리지 않는다 */}
+                {charsInZone.length === 0 && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm text-ink-faint">이 회차엔 등장 인물 없음</span>
+                  </div>
+                )}
+
+                {/* 인물 마커 — 무채 모노그램 (● 의식 / ○ 몸) */}
+                {markers.map(({ p, left, top }) => {
+                  const b = state.blocks.find((bl) => bl.id === p.characterId);
+                  const mind = isMind(b);
+                  const active = hoverChar === p.characterId || focusCharId === p.characterId;
+                  return (
+                    <button
+                      key={p.characterId}
+                      className="absolute -translate-x-1/2 -translate-y-1/2 border-0 bg-transparent p-0"
+                      style={{ left, top, zIndex: active ? 30 : 20 }}
+                      title={`${b?.name ?? p.characterId} — ${p.activity}`}
+                      onMouseEnter={() => setHoverChar(p.characterId)}
+                      onMouseLeave={() => setHoverChar(null)}
+                      onClick={() => openBlockDetail(p.characterId)}
+                    >
+                      <span
+                        className="relative inline-flex transition-transform"
+                        style={{ transform: active ? "scale(1.1)" : undefined }}
                       >
-                        {tok.icon}
+                        {/* 선택/hover 강조 = 형태(얇은 잉크 링)로. 광택·그림자 없음. */}
                         {active && (
                           <span
-                            className="pointer-events-none absolute left-1/2 top-full z-40 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-paper-300 bg-white px-2 py-1 text-xs text-stone-700"
-                            style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.18)" }}
-                          >
-                            <b className="text-amber-700">{b?.name}</b> · {p.activity}
-                          </span>
+                            className="pointer-events-none absolute rounded-full border border-ink"
+                            style={{ inset: -4 }}
+                          />
                         )}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex h-48 items-center justify-center text-stone-500">
-                  이 장소의 지도 데이터가 아직 없습니다.
-                </div>
-              )}
-            </div>
+                        <CharGlyph mind={mind}>{monogram(p.characterId, b?.name)}</CharGlyph>
+                      </span>
+                      {active && (
+                        <span className="pointer-events-none absolute left-1/2 top-full z-40 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-sm border border-line bg-paper px-2 py-1 text-xs text-ink-mid">
+                          <b className="text-ink">{b?.name}</b> · {p.activity}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex h-48 items-center justify-center rounded-sm border border-line bg-paper-2 text-ink-soft">
+                이 장소의 지도 데이터가 아직 없습니다.
+              </div>
+            )}
 
-            {/* 타일 범례 */}
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-stone-500">
-              <Legend color="#b6d29a" label="마당·풀밭" />
-              <Legend color="#ece0c8" label="마루·방" />
-              <Legend color="#b59875" label="흙벽·담" />
-              <Legend color="#a7d3e6" label="물가" />
-              <Legend color="#ecdcab" label="모래" />
-              <Legend prop="🌾" label="곳간·곡식" />
-              <Legend prop="🏺" label="장독대" />
-              <Legend gourd label="박" />
+            {/* 도면 범례 — 평면 형태/스와치 (광택 볼 아님) */}
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-ink-soft">
+              <span className="inline-flex items-center gap-1.5">
+                <CharGlyph mind size={14} />
+                의식(빙의 주체)
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <CharGlyph mind={false} size={14} />몸 / 일반 인물
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3.5 w-3.5 rounded-sm border border-line bg-paper" />
+                구역
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3.5 w-3.5 rounded-sm border border-line bg-paper-2" />
+                바닥
+              </span>
             </div>
           </div>
 
           {/* 이 회차·이 장소의 등장 인물 */}
           <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-stone-800">지금 이 장소에 있는 인물</h3>
-              <span className="text-sm text-stone-500">{episode?.title}</span>
+              <h3 className="text-lg font-bold text-ink">지금 이 장소에 있는 인물</h3>
+              <span className="text-sm text-ink-soft">{episode?.title}</span>
             </div>
             {charsInZone.length === 0 ? (
-              <p className="rounded-xl bg-paper-100 p-4 text-base text-stone-500">
-                이 회차에 <b className="text-stone-700">{zone?.name}</b>에 있는 인물이 없습니다. 위
+              <p className="rounded-sm bg-paper-2 p-4 text-base leading-relaxed text-ink-soft">
+                이 회차에 <b className="text-ink">{zone?.name}</b>에 있는 인물이 없습니다. 위
                 드롭다운이나 왼쪽 장소 레일에서 다른 곳을 골라 보세요.
               </p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2">
                 {charsInZone.map((p) => {
-                  const tok = CHAR_TOKEN[p.characterId] ?? FALLBACK_TOKEN;
                   const b = state.blocks.find((bl) => bl.id === p.characterId);
                   const active = focusCharId === p.characterId;
                   return (
                     <li
                       key={p.characterId}
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-sm border p-3 transition ${
                         active
-                          ? "border-amber-400 bg-amber-50"
-                          : "border-paper-300 bg-paper-100 hover:border-amber-300"
+                          ? "border-ink bg-paper-2"
+                          : "border-line bg-paper hover:bg-paper-2"
                       }`}
                       onClick={() => openBlockDetail(p.characterId)}
                     >
-                      <span
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: tok.bg, border: `2px solid ${tok.ring}` }}
-                      >
-                        {tok.icon}
-                      </span>
+                      <CharGlyph mind={isMind(b)} size={36}>
+                        {monogram(p.characterId, b?.name)}
+                      </CharGlyph>
                       <div className="min-w-0">
-                        <div className="font-bold text-stone-800">{b?.name ?? p.characterId}</div>
-                        <p className="truncate text-sm text-stone-500">{p.activity}</p>
+                        <div className="font-bold text-ink">{b?.name ?? p.characterId}</div>
+                        <p className="truncate text-sm text-ink-soft">{p.activity}</p>
                       </div>
                     </li>
                   );
@@ -410,41 +514,5 @@ export default function WorldAtlas() {
         </section>
       </div>
     </div>
-  );
-}
-
-function Legend({
-  color,
-  prop,
-  gourd,
-  label,
-}: {
-  color?: string;
-  prop?: string;
-  gourd?: boolean;
-  label: string;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span
-        className="flex h-4 w-4 items-center justify-center rounded"
-        style={{ background: color ?? "#ece0c8", fontSize: 11 }}
-      >
-        {gourd ? (
-          <span
-            style={{
-              width: 9,
-              height: 11,
-              borderRadius: "50% 50% 48% 48%",
-              background:
-                "radial-gradient(circle at 40% 30%, #d6e8a8 0%, #9cc466 60%, #6f9a44 100%)",
-            }}
-          />
-        ) : (
-          prop
-        )}
-      </span>
-      {label}
-    </span>
   );
 }
